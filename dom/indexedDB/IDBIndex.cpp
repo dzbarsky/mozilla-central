@@ -1307,7 +1307,7 @@ GetHelper::SendResponseToChildProcess(nsresult aResultCode)
     IDBDatabase* database = mIndex->ObjectStore()->Transaction()->Database();
     NS_ASSERTION(database, "This should never be null!");
 
-    ContentParent* contentParent = database->GetContentParent();
+    nsIContentParent* contentParent = database->GetContentParent();
     NS_ASSERTION(contentParent, "This should never be null!");
 
     FileManager* fileManager = database->Manager();
@@ -1685,7 +1685,7 @@ GetAllHelper::SendResponseToChildProcess(nsresult aResultCode)
     IDBDatabase* database = mIndex->ObjectStore()->Transaction()->Database();
     NS_ASSERTION(database, "This should never be null!");
 
-    ContentParent* contentParent = database->GetContentParent();
+    nsIContentParent* contentParent = database->GetContentParent();
     NS_ASSERTION(contentParent, "This should never be null!");
 
     FileManager* fileManager = database->Manager();
@@ -2372,7 +2372,7 @@ OpenCursorHelper::SendResponseToChildProcess(nsresult aResultCode)
     IDBDatabase* database = mIndex->ObjectStore()->Transaction()->Database();
     NS_ASSERTION(database, "This should never be null!");
 
-    ContentParent* contentParent = database->GetContentParent();
+    nsIContentParent* contentParent = database->GetContentParent();
     NS_ASSERTION(contentParent, "This should never be null!");
 
     FileManager* fileManager = database->Manager();

@@ -29,6 +29,7 @@ class ErrorResult;
 namespace dom {
 class ContentParent;
 class IDBOpenDBOptions;
+class nsIContentParent;
 
 namespace indexedDB {
 
@@ -45,6 +46,7 @@ class IDBFactory MOZ_FINAL : public nsISupports,
 {
   typedef mozilla::dom::ContentParent ContentParent;
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
+  typedef mozilla::dom::nsIContentParent nsIContentParent;
   typedef nsTArray<nsRefPtr<ObjectStoreInfo> > ObjectStoreInfoArray;
   typedef mozilla::dom::quota::StoragePrivilege StoragePrivilege;
 
@@ -56,12 +58,12 @@ public:
   static nsresult Create(nsPIDOMWindow* aWindow,
                          const nsACString& aGroup,
                          const nsACString& aASCIIOrigin,
-                         ContentParent* aContentParent,
+                         nsIContentParent* aContentParent,
                          IDBFactory** aFactory);
 
   // Called when using IndexedDB from a window in the current process.
   static nsresult Create(nsPIDOMWindow* aWindow,
-                         ContentParent* aContentParent,
+                         nsIContentParent* aContentParent,
                          IDBFactory** aFactory)
   {
     return Create(aWindow, EmptyCString(), EmptyCString(), aContentParent,
@@ -72,12 +74,12 @@ public:
   // process.
   static nsresult Create(JSContext* aCx,
                          JS::Handle<JSObject*> aOwningObject,
-                         ContentParent* aContentParent,
+                         nsIContentParent* aContentParent,
                          IDBFactory** aFactory);
 
   // Called when using IndexedDB from a JS component or a JSM in a different
   // process.
-  static nsresult Create(ContentParent* aContentParent,
+  static nsresult Create(nsIContentParent* aContentParent,
                          IDBFactory** aFactory);
 
   static already_AddRefed<nsIFileURL>
@@ -212,7 +214,7 @@ private:
   IndexedDBChild* mActorChild;
   IndexedDBParent* mActorParent;
 
-  mozilla::dom::ContentParent* mContentParent;
+  mozilla::dom::nsIContentParent* mContentParent;
 
   bool mRootedOwningObject;
 };
