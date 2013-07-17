@@ -70,6 +70,9 @@ class ContentParent : public PContentParent
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
+
+    virtual bool IsContentParent() { return true; }
+
     /**
      * Start up the content-process machinery.  This might include
      * scheduling pre-launch tasks.

@@ -279,16 +279,18 @@ TabParent::Destroy()
   }
   mIsDestroyed = true;
 
-  // XXXdz what if manager is not ContentParent
-  static_cast<ContentParent*>(Manager())->NotifyTabDestroying(this);
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    Manager()->AsContentParent()->NotifyTabDestroying(this);
+  }
   mMarkedDestroying = true;
 }
 
 bool
 TabParent::Recv__delete__()
 {
-  // XXXdz what if manager is not ContentParent
-  static_cast<ContentParent*>(Manager())->NotifyTabDestroyed(this, mMarkedDestroying);
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    Manager()->AsContentParent()->NotifyTabDestroyed(this, mMarkedDestroying);
+  }
   return true;
 }
 
