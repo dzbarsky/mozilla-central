@@ -24,6 +24,8 @@ class CpowEntry;
 namespace dom {
 struct IPCTabContext;
 
+class ContentParent;
+
 class nsIContentParent : public nsISupports
                        , public mozilla::dom::ipc::MessageManagerCallback
 {
@@ -44,6 +46,9 @@ public:
             const uint32_t& chromeFlags) NS_WARN_UNUSED_RESULT = 0;
 
     virtual jsipc::JavaScriptParent *GetCPOWManager() = 0;
+
+    virtual bool IsContentParent() { return false; }
+    ContentParent* AsContentParent();
 
 protected:
     virtual mozilla::jsipc::PJavaScriptParent* AllocPJavaScriptParent();

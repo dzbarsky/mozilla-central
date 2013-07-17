@@ -61,8 +61,8 @@ AssertAppProcess(PBrowserParent* aActor,
 
   if (!aValid) {
     printf_stderr("Security problem: Content process does not have `%s'.  It will be killed.\n", aCapability);
-    // XXXdz what if the manager isn't a content parent?
-    ContentParent* process = static_cast<ContentParent*>(tab->Manager());
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+    ContentParent* process = tab->Manager()->AsContentParent();
     process->KillHard();
   }
   return aValid;

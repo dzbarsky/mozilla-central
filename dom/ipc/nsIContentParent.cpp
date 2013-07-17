@@ -12,6 +12,7 @@
 #include "nsDOMFile.h"
 #include "mozilla/dom/ipc/nsIRemoteBlob.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
+#include "mozilla/dom/ContentParent.h"
 #include "JavaScriptParent.h"
 #include "nsPrintfCString.h"
 
@@ -23,6 +24,13 @@ namespace dom {
 nsIContentParent::nsIContentParent()
 {
      mMessageManager = nsFrameMessageManager::NewProcessMessageManager(this);
+}
+
+ContentParent*
+nsIContentParent::AsContentParent()
+{
+  MOZ_ASSERT(IsContentParent());
+  return static_cast<ContentParent*>(this);
 }
 
 mozilla::jsipc::PJavaScriptParent *
