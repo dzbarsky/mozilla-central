@@ -13,10 +13,11 @@
 
 #include <algorithm>
 #include "jsfriendapi.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/nsIContentParent.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/FileHandleBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/storage.h"
@@ -107,7 +108,8 @@ public:
   virtual nsresult Dispatch(nsIEventTarget* aDatabaseThread) MOZ_OVERRIDE;
 
   virtual nsresult
-  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) = 0;
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                nsIContentChild* aBlobCreator) = 0;
 
   virtual nsresult
   UnpackResponseFromParentProcess(const ResponseValue& aResponseValue) = 0;
@@ -179,7 +181,8 @@ public:
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
   virtual nsresult
-  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                nsIContentChild* aBlobCreator) MOZ_OVERRIDE;
 
   virtual ChildProcessSendResult
   SendResponseToChildProcess(nsresult aResultCode) MOZ_OVERRIDE;
@@ -223,7 +226,8 @@ public:
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
   virtual nsresult
-  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                nsIContentChild* aBlobCreator) MOZ_OVERRIDE;
 
   virtual ChildProcessSendResult
   SendResponseToChildProcess(nsresult aResultCode) MOZ_OVERRIDE;
@@ -258,7 +262,8 @@ public:
                                     JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   virtual nsresult
-  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                nsIContentChild* aBlobCreator) MOZ_OVERRIDE;
 
   virtual ChildProcessSendResult
   SendResponseToChildProcess(nsresult aResultCode) MOZ_OVERRIDE;
@@ -281,7 +286,8 @@ public:
                                   MOZ_OVERRIDE;
 
   virtual nsresult
-  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                nsIContentChild* aBlobCreator) MOZ_OVERRIDE;
 
   virtual ChildProcessSendResult
   SendResponseToChildProcess(nsresult aResultCode) MOZ_OVERRIDE;
@@ -317,7 +323,8 @@ public:
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
   virtual nsresult
-  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                nsIContentChild* aBlobCreator) MOZ_OVERRIDE;
 
   virtual ChildProcessSendResult
   SendResponseToChildProcess(nsresult aResultCode) MOZ_OVERRIDE;
@@ -367,7 +374,8 @@ public:
   ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
   virtual nsresult
-  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                nsIContentChild* aBlobCreator) MOZ_OVERRIDE;
 
   virtual ChildProcessSendResult
   SendResponseToChildProcess(nsresult aResultCode) MOZ_OVERRIDE;
@@ -474,7 +482,8 @@ public:
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
   virtual nsresult
-  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                nsIContentChild* aBlobCreator) MOZ_OVERRIDE;
 
   virtual ChildProcessSendResult
   SendResponseToChildProcess(nsresult aResultCode) MOZ_OVERRIDE;
@@ -515,7 +524,8 @@ public:
   ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
   virtual nsresult
-  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                nsIContentChild* aBlobCreator) MOZ_OVERRIDE;
 
   virtual ChildProcessSendResult
   SendResponseToChildProcess(nsresult aResultCode) MOZ_OVERRIDE;
@@ -553,7 +563,8 @@ public:
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
   virtual nsresult
-  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                nsIContentChild* aBlobCreator) MOZ_OVERRIDE;
 
   virtual ChildProcessSendResult
   SendResponseToChildProcess(nsresult aResultCode) MOZ_OVERRIDE;
@@ -3077,7 +3088,22 @@ ObjectStoreHelper::Dispatch(nsIEventTarget* aDatabaseThread)
   NS_ASSERTION(objectStoreActor, "Must have an actor here!");
 
   ObjectStoreRequestParams params;
-  nsresult rv = PackArgumentsForParentProcess(params);
+
+  // Our "parent" process may be either the root process or another content
+  // process if this indexedDB is managed by a PBrowser that is managed by a
+  // PContentBridge.  We need to find which one it is so that we can create
+  // PBlobs that are managed by the right nsIContentChild.
+  IndexedDBChild* rootActor =
+    static_cast<IndexedDBChild*>(objectStoreActor->Manager()->
+                                   Manager()->Manager());
+  nsIContentChild* blobCreator;
+  if (rootActor->GetManagerContent()) {
+    blobCreator = rootActor->GetManagerContent();
+  } else {
+    blobCreator = rootActor->GetManagerTab()->Manager();
+  }
+
+  nsresult rv = PackArgumentsForParentProcess(params, blobCreator);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   NoDispatchEventTarget target;
@@ -3332,10 +3358,12 @@ AddHelper::ReleaseMainThreadObjects()
 }
 
 nsresult
-AddHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
+AddHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                         nsIContentChild* aBlobCreator)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+  NS_ASSERTION(aBlobCreator, "Must have a valid creator!");
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
                              "AddHelper::PackArgumentsForParentProcess");
@@ -3353,8 +3381,7 @@ AddHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
     InfallibleTArray<PBlobChild*>& blobsChild = commonParams.blobsChild();
     blobsChild.SetCapacity(fileCount);
 
-    ContentChild* contentChild = ContentChild::GetSingleton();
-    NS_ASSERTION(contentChild, "This should never be null!");
+    NS_ASSERTION(aBlobCreator, "This should never be null!");
 
     for (uint32_t index = 0; index < fileCount; index++) {
       const StructuredCloneFile& file = files[index];
@@ -3363,7 +3390,7 @@ AddHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
       NS_ASSERTION(!file.mFileInfo, "This is not yet supported!");
 
       BlobChild* actor =
-        contentChild->GetOrCreateActorForBlob(file.mFile);
+        aBlobCreator->GetOrCreateActorForBlob(file.mFile);
       if (!actor) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
@@ -3497,11 +3524,13 @@ GetHelper::ReleaseMainThreadObjects()
 }
 
 nsresult
-GetHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
+GetHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                         nsIContentChild* aBlobCreator)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
   NS_ASSERTION(mKeyRange, "This should never be null!");
+  NS_ASSERTION(aBlobCreator, "Must have a valid creator!");
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
                              "GetHelper::PackArgumentsForParentProcess "
@@ -3636,11 +3665,13 @@ DeleteHelper::GetSuccessResult(JSContext* aCx,
 }
 
 nsresult
-DeleteHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
+DeleteHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                            nsIContentChild* aBlobCreator)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
   NS_ASSERTION(mKeyRange, "This should never be null!");
+  NS_ASSERTION(aBlobCreator, "Must have a valid creator!");
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
                              "DeleteHelper::PackArgumentsForParentProcess");
@@ -3718,10 +3749,12 @@ ClearHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-ClearHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
+ClearHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                           nsIContentChild* aBlobCreator)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+  NS_ASSERTION(aBlobCreator, "Must have a valid creator!");
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
                              "ClearHelper::PackArgumentsForParentProcess");
@@ -3953,10 +3986,12 @@ OpenCursorHelper::ReleaseMainThreadObjects()
 
 nsresult
 OpenCursorHelper::PackArgumentsForParentProcess(
-                                              ObjectStoreRequestParams& aParams)
+                                              ObjectStoreRequestParams& aParams,
+                                              nsIContentChild* aBlobCreator)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+  NS_ASSERTION(aBlobCreator, "Must have a valid creator!");
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
                              "OpenCursorHelper::PackArgumentsForParentProcess "
@@ -4281,7 +4316,8 @@ OpenKeyCursorHelper::ReleaseMainThreadObjects()
 
 nsresult
 OpenKeyCursorHelper::PackArgumentsForParentProcess(
-                                              ObjectStoreRequestParams& aParams)
+                                              ObjectStoreRequestParams& aParams,
+                                              nsIContentChild* aBlobCreator)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IndexedDatabaseManager::IsMainProcess());
@@ -4720,10 +4756,12 @@ GetAllHelper::ReleaseMainThreadObjects()
 }
 
 nsresult
-GetAllHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
+GetAllHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                            nsIContentChild* aBlobCreator)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+  NS_ASSERTION(aBlobCreator, "Must have a valid creator!");
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
                              "GetAllHelper::PackArgumentsForParentProcess "
@@ -4969,7 +5007,8 @@ GetAllKeysHelper::ReleaseMainThreadObjects()
 
 nsresult
 GetAllKeysHelper::PackArgumentsForParentProcess(
-                                              ObjectStoreRequestParams& aParams)
+                                              ObjectStoreRequestParams& aParams,
+                                              nsIContentChild* aBlobCreator)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IndexedDatabaseManager::IsMainProcess());
@@ -5122,10 +5161,12 @@ CountHelper::ReleaseMainThreadObjects()
 }
 
 nsresult
-CountHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
+CountHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams,
+                                           nsIContentChild* aBlobCreator)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+  NS_ASSERTION(aBlobCreator, "Must have a valid creator!");
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
                              "CountHelper::PackArgumentsForParentProcess "

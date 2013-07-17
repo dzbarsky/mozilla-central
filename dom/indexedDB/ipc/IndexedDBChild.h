@@ -21,6 +21,13 @@
 
 class nsIAtom;
 
+namespace mozilla {
+namespace dom {
+class ContentChild;
+class TabChild;
+}
+}
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
@@ -38,6 +45,9 @@ class IDBTransactionListener;
 class IndexedDBChild : public PIndexedDBChild
 {
   IDBFactory* mFactory;
+  ContentChild* mManagerContent;
+  TabChild* mManagerTab;
+
   nsCString mASCIIOrigin;
 
 #ifdef DEBUG
@@ -45,13 +55,26 @@ class IndexedDBChild : public PIndexedDBChild
 #endif
 
 public:
-  IndexedDBChild(const nsCString& aASCIIOrigin);
+  IndexedDBChild(ContentChild* aContentChild, const nsCString& aASCIIOrigin);
+  IndexedDBChild(TabChild* aTabChild, const nsCString& aASCIIOrigin);
   virtual ~IndexedDBChild();
 
   const nsCString&
   ASCIIOrigin() const
   {
     return mASCIIOrigin;
+  }
+
+  ContentChild*
+  GetManagerContent() const
+  {
+    return mManagerContent;
+  }
+
+  TabChild*
+  GetManagerTab() const
+  {
+    return mManagerTab;
   }
 
   void
