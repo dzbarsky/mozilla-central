@@ -101,7 +101,9 @@ nsIContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
       static_cast<BlobChild*>(
         static_cast<PBlobChild*>(remoteBlob->GetPBlob()));
     MOZ_ASSERT(actor);
-    return actor;
+    if (actor->Manager() == this) {
+      return actor;
+    }
   }
 
   // XXX This is only safe so long as all blob implementations in our tree
@@ -129,7 +131,9 @@ nsIContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
           static_cast<BlobChild*>(
             static_cast<PBlobChild*>(remoteBlob->GetPBlob()));
         MOZ_ASSERT(actor);
-        return actor;
+        if (actor->Manager() == this) {
+          return actor;
+        }
       }
 
       // No need to add a reference here since the original blob must have a
