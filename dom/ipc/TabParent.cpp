@@ -1296,12 +1296,10 @@ TabParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
     return true;
   }
 
-  // XXXdz what if ContentParent is not the manager?
-  ContentParent* contentParent = static_cast<ContentParent*>(Manager());
-  NS_ASSERTION(contentParent, "Null manager?!");
+  NS_ASSERTION(Manager(), "Null manager?!");
 
   nsRefPtr<IDBFactory> factory;
-  rv = IDBFactory::Create(window, aGroup, aASCIIOrigin, contentParent,
+  rv = IDBFactory::Create(window, aGroup, aASCIIOrigin, Manager(),
                           getter_AddRefs(factory));
   NS_ENSURE_SUCCESS(rv, false);
 

@@ -14,7 +14,7 @@
 #include <algorithm>
 #include "jsfriendapi.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/dom/FileHandleBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/ipc/Blob.h"
@@ -1768,7 +1768,7 @@ IDBObjectStore::ConvertActorsToBlobs(
 // static
 nsresult
 IDBObjectStore::ConvertBlobsToActors(
-                                    ContentParent* aContentParent,
+                                    nsIContentParent* aContentParent,
                                     FileManager* aFileManager,
                                     const nsTArray<StructuredCloneFile>& aFiles,
                                     InfallibleTArray<PBlobParent*>& aActors)
@@ -3534,7 +3534,7 @@ GetHelper::SendResponseToChildProcess(nsresult aResultCode)
     IDBDatabase* database = mObjectStore->Transaction()->Database();
     NS_ASSERTION(database, "This should never be null!");
 
-    ContentParent* contentParent = database->GetContentParent();
+    nsIContentParent* contentParent = database->GetContentParent();
     NS_ASSERTION(contentParent, "This should never be null!");
 
     FileManager* fileManager = database->Manager();
@@ -3999,7 +3999,7 @@ OpenCursorHelper::SendResponseToChildProcess(nsresult aResultCode)
     IDBDatabase* database = mObjectStore->Transaction()->Database();
     NS_ASSERTION(database, "This should never be null!");
 
-    ContentParent* contentParent = database->GetContentParent();
+    nsIContentParent* contentParent = database->GetContentParent();
     NS_ASSERTION(contentParent, "This should never be null!");
 
     FileManager* fileManager = database->Manager();
@@ -4764,7 +4764,7 @@ GetAllHelper::SendResponseToChildProcess(nsresult aResultCode)
     IDBDatabase* database = mObjectStore->Transaction()->Database();
     NS_ASSERTION(database, "This should never be null!");
 
-    ContentParent* contentParent = database->GetContentParent();
+    nsIContentParent* contentParent = database->GetContentParent();
     NS_ASSERTION(contentParent, "This should never be null!");
 
     FileManager* fileManager = database->Manager();
