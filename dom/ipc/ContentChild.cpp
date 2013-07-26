@@ -17,6 +17,8 @@
 #include "TabChild.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/ContentBridgeChild.h"
+#include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/DOMStorageIPC.h"
@@ -534,6 +536,23 @@ ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
     dumper->DumpGCAndCCLogsToFile(aIdentifier, aDumpAllTraces,
                                   aDumpChildProcesses);
     return true;
+}
+
+PContentBridgeChild*
+ContentChild::AllocPContentBridgeChild(mozilla::ipc::Transport* aTransport,
+                                       base::ProcessId aOtherProcess)
+{
+    return ContentBridgeChild::Create(aTransport, aOtherProcess);
+}
+
+PContentBridgeParent*
+ContentChild::AllocPContentBridgeParent(mozilla::ipc::Transport* aTransport,
+                                        base::ProcessId aOtherProcess)
+{
+    MOZ_ASSERT(!mLastBridge);
+    mLastBridge =
+      static_cast<ContentBridgeParent*>(ContentBridgeParent::Create(aTransport, aOtherProcess));
+    return mLastBridge;
 }
 
 PCompositorChild*

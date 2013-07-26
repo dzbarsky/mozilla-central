@@ -8,6 +8,7 @@ include protocol PBlob;
 include protocol PBluetooth;
 include protocol PBrowser;
 include protocol PCompositor;
+include protocol PContentBridge;
 include protocol PCrashReporter;
 include protocol PExternalHelperApp;
 include protocol PDeviceStorageRequest;
@@ -341,6 +342,10 @@ parent:
         returns (uint64_t id, bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
         returns (bool isOffline);
+
+    sync CreateChildProcess(IPCTabContext context)
+        returns (uint64_t id);
+    intr BridgeToChildProcess(uint64_t id);
 
     PDeviceStorageRequest(DeviceStorageParams params);
 

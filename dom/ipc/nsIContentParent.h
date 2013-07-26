@@ -27,7 +27,7 @@ struct IPCTabContext;
 class nsIContentParent : public nsISupports
                        , public mozilla::dom::ipc::MessageManagerCallback
 {
-  public:
+public:
     nsIContentParent();
     BlobParent* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
     virtual uint64_t ChildID() = 0;
@@ -36,11 +36,20 @@ class nsIContentParent : public nsISupports
     SendPBlobConstructor(
             PBlobParent* actor,
             const BlobConstructorParams& params) NS_WARN_UNUSED_RESULT = 0;
+
+    virtual PBrowserParent*
+    SendPBrowserConstructor(
+            PBrowserParent* actor,
+            const IPCTabContext& context,
+            const uint32_t& chromeFlags) NS_WARN_UNUSED_RESULT = 0;
+
     virtual jsipc::JavaScriptParent *GetCPOWManager() = 0;
 
 protected:
     virtual mozilla::jsipc::PJavaScriptParent* AllocPJavaScriptParent();
     virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*);
+
+    bool CanOpenBrowser(const IPCTabContext& aContext);
 
     virtual PBrowserParent* AllocPBrowserParent(const IPCTabContext& aContext,
                                                 const uint32_t& aChromeFlags);

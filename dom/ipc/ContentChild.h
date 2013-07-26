@@ -11,6 +11,7 @@
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "nsWeakPtr.h"
+#include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/nsIContentChild.h"
 
 
@@ -81,6 +82,20 @@ public:
     void SetProcessName(const nsAString& aName);
     const void GetProcessName(nsAString& aName);
 
+    ContentBridgeParent* GetLastBridge() {
+        MOZ_ASSERT(mLastBridge);
+        ContentBridgeParent* parent = mLastBridge;
+        mLastBridge = nullptr;
+        return parent;
+    }
+    nsRefPtr<ContentBridgeParent> mLastBridge;
+
+    PContentBridgeParent*
+    AllocPContentBridgeParent(mozilla::ipc::Transport* transport,
+                              base::ProcessId otherProcess) MOZ_OVERRIDE;
+    PContentBridgeChild*
+    AllocPContentBridgeChild(mozilla::ipc::Transport* transport,
+                             base::ProcessId otherProcess) MOZ_OVERRIDE;
     PCompositorChild*
     AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                           base::ProcessId aOtherProcess) MOZ_OVERRIDE;
@@ -90,6 +105,9 @@ public:
 
     virtual bool RecvSetProcessPrivileges(const ChildPrivileges& aPrivs);
 
+    static PBrowserChild* AllocPBrowser(ContentChild* aChild,
+                                        const IPCTabContext &aContext,
+                                        const uint32_t &chromeFlags);
     virtual PBrowserChild* AllocPBrowserChild(const IPCTabContext &aContext,
                                               const uint32_t &chromeFlags);
     virtual bool DeallocPBrowserChild(PBrowserChild*);

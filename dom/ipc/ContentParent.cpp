@@ -28,6 +28,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
+#include "mozilla/dom/PContentBridgeParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/DOMStorageIPC.h"
@@ -352,6 +353,7 @@ ContentParent::RunNuwaProcess()
 
     sNuwaProcess =
         new ContentParent(/* aApp = */ nullptr,
+                          /* aOpener */ nullptr,
                           /* aIsForBrowser = */ false,
                           /* aIsForPreallocated = */ true,
                           // Final privileges are set when we
@@ -470,6 +472,7 @@ ContentParent::PreallocateAppProcess()
 {
     nsRefPtr<ContentParent> process =
         new ContentParent(/* app = */ nullptr,
+                          /* aOpener */ nullptr,
                           /* isForBrowserElement = */ false,
                           /* isForPreallocated = */ true,
                           // Final privileges are set when we
@@ -508,10 +511,6 @@ ContentParent::MaybeTakePreallocatedAppProcess(const nsAString& aAppManifestURL,
 /*static*/ void
 ContentParent::StartUp()
 {
-    if (XRE_GetProcessType() != GeckoProcessType_Default) {
-        return;
-    }
-
     nsRefPtr<ContentParentMemoryReporter> mr = new ContentParentMemoryReporter();
     NS_RegisterMemoryReporter(mr);
 
@@ -587,7 +586,7 @@ ContentParent::JoinAllSubprocesses()
 }
 
 /*static*/ already_AddRefed<ContentParent>
-ContentParent::GetNewOrUsed(bool aForBrowserElement)
+ContentParent::GetNewOrUsed(bool aForBrowserElement, ContentParent* aOpener)
 {
     if (!sNonAppContentParents)
         sNonAppContentParents = new nsTArray<ContentParent*>();
@@ -597,14 +596,21 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
         maxContentProcesses = 1;
 
     if (sNonAppContentParents->Length() >= uint32_t(maxContentProcesses)) {
-        uint32_t idx = rand() % sNonAppContentParents->Length();
-        nsRefPtr<ContentParent> p = (*sNonAppContentParents)[idx];
-        NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in sNonAppContentParents?");
-        return p.forget();
+        uint32_t startIdx = rand() % sNonAppContentParents->Length();
+        uint32_t currIdx = startIdx;
+        do {
+          nsRefPtr<ContentParent> p = (*sNonAppContentParents)[currIdx];
+          NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in sNonAppContentParents?");
+          if (p->mOpener == aOpener) {
+              return p.forget();
+          }
+          currIdx = (currIdx + 1) % sNonAppContentParents->Length();
+        } while (currIdx != startIdx);
     }
 
     nsRefPtr<ContentParent> p =
         new ContentParent(/* app = */ nullptr,
+                          aOpener,
                           aForBrowserElement,
                           /* isForPreallocated = */ false,
                           base::PRIVILEGES_DEFAULT,
@@ -671,6 +677,47 @@ ContentParent::GetInitialProcessPriority(Element* aFrameElement)
                PROCESS_PRIORITY_FOREGROUND;
 }
 
+typedef std::map<ContentParent*, std::set<ContentParent*> > GrandchildMap;
+static GrandchildMap sGrandchildProcessMap;
+
+std::map<uint64_t, ContentParent*> sContentParentMap;
+
+bool
+ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext, uint64_t* id)
+{
+    /*if (!CanOpenBrowser(aContext)) {
+        return false;
+    }*/
+
+    nsRefPtr<ContentParent> cp = GetNewOrUsed(/* isBrowserElement = */ true, this);
+    *id = cp->mChildID;
+    sContentParentMap[*id] = cp;
+    GrandchildMap::iterator iter = sGrandchildProcessMap.find(this);
+    if (iter == sGrandchildProcessMap.end()) {
+        std::set<ContentParent*> children;
+        children.insert(cp);
+        sGrandchildProcessMap[this] = children;
+    } else {
+        iter->second.insert(cp);
+    }
+    return true;
+}
+
+bool
+ContentParent::AnswerBridgeToChildProcess(const uint64_t& id)
+{
+    ContentParent* cp = sContentParentMap[id];
+    GrandchildMap::iterator iter = sGrandchildProcessMap.find(this);
+    if (iter != sGrandchildProcessMap.end() &&
+        iter->second.find(cp) != iter->second.end()) {
+        return PContentBridge::Bridge(this, cp);
+    } else {
+        // You can't bridge to a process you didn't open!
+        KillHard();
+        return false;
+    }
+}
+
 /*static*/ TabParent*
 ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                                   Element* aFrameElement)
@@ -680,18 +727,43 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     }
 
     if (aContext.IsBrowserElement() || !aContext.HasOwnApp()) {
-        if (nsRefPtr<ContentParent> cp = GetNewOrUsed(aContext.IsBrowserElement())) {
-            nsRefPtr<TabParent> tp(new TabParent(cp, aContext));
+        nsRefPtr<TabParent> tp;
+        nsRefPtr<nsIContentParent> constructorSender;
+        // If we are in a child process, we want to open a sibling and bridge.
+        if (XRE_GetProcessType() != GeckoProcessType_Default) {
+            MOZ_ASSERT(aContext.IsBrowserElement());
+            ContentChild* child = ContentChild::GetSingleton();
+            uint64_t id;
+            if (!child->SendCreateChildProcess(aContext.AsIPCTabContext(), &id)) {
+                return nullptr;
+            }
+            if (!child->CallBridgeToChildProcess(id)) {
+                return nullptr;
+            }
+            ContentBridgeParent* parent = child->GetLastBridge();
+            tp = new TabParent(parent, aContext);
+            constructorSender = parent;
+        } else if (nsRefPtr<ContentParent> cp = GetNewOrUsed(aContext.IsBrowserElement())) {
+            tp = new TabParent(cp, aContext);
+            constructorSender = cp;
+        }
+        if (tp) {
             tp->SetOwnerElement(aFrameElement);
             uint32_t chromeFlags = 0;
 
             // Propagate the private-browsing status of the element's parent
             // docshell to the remote docshell, via the chrome flags.
             nsCOMPtr<Element> frameElement = do_QueryInterface(aFrameElement);
-            MOZ_ASSERT(frameElement);
-            nsIDocShell* docShell =
-                frameElement->OwnerDoc()->GetWindow()->GetDocShell();
-            MOZ_ASSERT(docShell);
+            nsPIDOMWindow* win = frameElement->OwnerDoc()->GetWindow();
+            if (!win) {
+                NS_WARNING("Remote frame has no window");
+                return nullptr;
+            }
+            nsIDocShell* docShell = win->GetDocShell();
+            if (!docShell) {
+                NS_WARNING("Remote frame has no docshell");
+                return nullptr;
+            }
             nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
             if (loadContext && loadContext->UsePrivateBrowsing()) {
                 chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
@@ -702,7 +774,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                 chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
             }
 
-            PBrowserParent* browser = cp->SendPBrowserConstructor(
+            PBrowserParent* browser = constructorSender->SendPBrowserConstructor(
                 tp.forget().get(), // DeallocPBrowserParent() releases this ref.
                 aContext.AsIPCTabContext(),
                 chromeFlags);
@@ -747,6 +819,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         if (!p) {
             NS_WARNING("Unable to use pre-allocated app process");
             p = new ContentParent(ownApp,
+                                  /* aOpener = */ nullptr,
                                   /* isForBrowserElement = */ false,
                                   /* isForPreallocated = */ false,
                                   privs,
@@ -1079,6 +1152,13 @@ ContentParent::MarkAsDead()
     }
 
     mIsAlive = false;
+
+    sGrandchildProcessMap.erase(this);
+    for (GrandchildMap::iterator iter = sGrandchildProcessMap.begin();
+         iter != sGrandchildProcessMap.end();
+         iter++) {
+        iter->second.erase(this);
+    }
 }
 
 void
@@ -1324,6 +1404,19 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     // This runnable ensures that a reference to |this| lives on at
     // least until after the current task finishes running.
     NS_DispatchToCurrentThread(new DelayedDeleteContentParentTask(this));
+
+    // Destroy any processes created by this ContentParent
+    GrandchildMap::iterator iter = sGrandchildProcessMap.find(this);
+    if (iter != sGrandchildProcessMap.end()) {
+        for(std::set<ContentParent*>::iterator child = iter->second.begin();
+            child != iter->second.end();
+            child++) {
+            MessageLoop::current()->PostTask(
+              FROM_HERE,
+              NewRunnableMethod(*child, &ContentParent::ShutDownProcess,
+                                /* closeWithError */ false));
+        }
+    }
 }
 
 void
@@ -1420,6 +1513,7 @@ ContentParent::InitializeMembers()
 }
 
 ContentParent::ContentParent(mozIApplication* aApp,
+                             ContentParent* aOpener,
                              bool aIsForBrowser,
                              bool aIsForPreallocated,
                              ChildPrivileges aOSPrivileges,
@@ -1427,6 +1521,7 @@ ContentParent::ContentParent(mozIApplication* aApp,
                              bool aIsNuwaProcess /* = false */)
     : nsIContentParent()
     , mSubprocess(nullptr)
+    , mOpener(aOpener)
     , mOSPrivileges(aOSPrivileges)
     , mChildID(gContentChildID++)
     , mGeolocationWatchID(-1)
@@ -3095,6 +3190,14 @@ ContentParent::SendPBlobConstructor(PBlobParent* actor,
                                     const BlobConstructorParams& params)
 {
   return PContentParent::SendPBlobConstructor(actor, params);
+}
+
+PBrowserParent*
+ContentParent::SendPBrowserConstructor(PBrowserParent* actor,
+                                       const IPCTabContext& context,
+                                       const uint32_t& chromeFlags)
+{
+  return PContentParent::SendPBrowserConstructor(actor, context, chromeFlags);
 }
 
 bool

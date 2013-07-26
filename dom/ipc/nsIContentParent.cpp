@@ -43,12 +43,9 @@ nsIContentParent::DeallocPJavaScriptParent(PJavaScriptParent *parent)
     return true;
 }
 
-PBrowserParent*
-nsIContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
-                                      const uint32_t &aChromeFlags)
+bool
+nsIContentParent::CanOpenBrowser(const IPCTabContext& aContext)
 {
-    unused << aChromeFlags;
-
     const IPCTabAppBrowserContext& appBrowser = aContext.appBrowserContext();
 
     // We don't trust the IPCTabContext we receive from the child, so we'll bail
@@ -57,14 +54,14 @@ nsIContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
     // the app it's trying to open.)
     if (appBrowser.type() != IPCTabAppBrowserContext::TPopupIPCTabContext) {
         NS_ERROR("Unexpected IPCTabContext type.  Aborting AllocPBrowserParent.");
-        return nullptr;
+        return false;
     }
 
     const PopupIPCTabContext& popupContext = appBrowser.get_PopupIPCTabContext();
     TabParent* opener = static_cast<TabParent*>(popupContext.openerParent());
     if (!opener) {
         NS_ERROR("Got null opener from child; aborting AllocPBrowserParent.");
-        return nullptr;
+        return false;
     }
 
     // Popup windows of isBrowser frames must be isBrowser if the parent
@@ -72,7 +69,7 @@ nsIContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
     // the content to access data it's not supposed to.
     if (!popupContext.isBrowserElement() && opener->IsBrowserElement()) {
         NS_ERROR("Child trying to escalate privileges!  Aborting AllocPBrowserParent.");
-        return nullptr;
+        return false;
     }
 
     MaybeInvalidTabContext tc(aContext);
@@ -80,9 +77,24 @@ nsIContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
         NS_ERROR(nsPrintfCString("Child passed us an invalid TabContext.  (%s)  "
                                  "Aborting AllocPBrowserParent.",
                                  tc.GetInvalidReason()).get());
+        return false;
+    }
+
+    return true;
+}
+
+PBrowserParent*
+nsIContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
+                                      const uint32_t &aChromeFlags)
+{
+    unused << aChromeFlags;
+
+    if (!CanOpenBrowser(aContext)) {
         return nullptr;
     }
 
+    MaybeInvalidTabContext tc(aContext);
+    MOZ_ASSERT(tc.IsValid());
     TabParent* parent = new TabParent(this, tc.GetTabContext());
 
     // We release this ref in DeallocPBrowserParent()
