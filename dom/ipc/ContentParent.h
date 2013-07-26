@@ -86,7 +86,7 @@ public:
     static void JoinAllSubprocesses();
 
     static already_AddRefed<ContentParent>
-    GetNewOrUsed(bool aForBrowserElement = false);
+    GetNewOrUsed(bool aForBrowserElement = false, ContentParent* aOpener = nullptr);
 
     /**
      * Create a subprocess suitable for use as a preallocated app process.
@@ -103,6 +103,10 @@ public:
     static TabParent*
     CreateBrowserOrApp(const TabContext& aContext,
                        Element* aFrameElement);
+
+    virtual bool RecvCreateChildProcess(const IPCTabContext& context,
+                                        uint64_t* id) MOZ_OVERRIDE;
+    virtual bool AnswerBridgeToChildProcess(const uint64_t& id) MOZ_OVERRIDE;
 
     static void GetAll(nsTArray<ContentParent*>& aArray);
     static void GetAllEvenIfDead(nsTArray<ContentParent*>& aArray);
@@ -150,6 +154,10 @@ public:
     }
 
     int32_t Pid();
+
+    ContentParent* Opener() {
+        return mOpener;
+    }
 
     bool NeedsPermissionsUpdate() {
         return mSendPermissionUpdates;
@@ -243,12 +251,17 @@ private:
 
     // Hide the raw constructor methods since we don't want client code
     // using them.
-    using PContentParent::SendPBrowserConstructor;
+    virtual PBrowserParent*
+    SendPBrowserConstructor(PBrowserParent* actor,
+                            const IPCTabContext& context,
+                            const uint32_t& chromeFlags) MOZ_OVERRIDE;
+
     using PContentParent::SendPTestShellConstructor;
 
     // No more than one of !!aApp, aIsForBrowser, and aIsForPreallocated may be
     // true.
     ContentParent(mozIApplication* aApp,
+                  ContentParent* aOpener,
                   bool aIsForBrowser,
                   bool aIsForPreallocated,
                   ChildPrivileges aOSPrivileges = base::PRIVILEGES_DEFAULT,
@@ -500,6 +513,7 @@ private:
     // details.
 
     GeckoChildProcessHost* mSubprocess;
+    ContentParent* mOpener;
     base::ChildPrivileges mOSPrivileges;
 
     uint64_t mChildID;
