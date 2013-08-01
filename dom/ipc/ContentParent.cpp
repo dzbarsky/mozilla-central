@@ -91,6 +91,7 @@
 #include "URIUtils.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDocShell.h"
+#include <set>
 
 #if defined(ANDROID) || defined(LINUX)
 #include "nsSystemInfo.h"
@@ -1153,6 +1154,39 @@ ContentParent::ProcessingError(Result what)
     }
     // Other errors are big deals.
     KillHard();
+}
+
+typedef std::map<ContentParent*, std::set<uint64_t> > IDMap;
+static IDMap sNestedBrowserIds;
+
+bool
+ContentParent::RecvAllocateLayerTreeId(uint64_t* id)
+{
+    *id = CompositorParent::AllocateLayerTreeId();
+
+    IDMap::iterator iter = sNestedBrowserIds.find(this);
+    if (iter == sNestedBrowserIds.end()) {
+        std::set<uint64_t> ids;
+        ids.insert(*id);
+        sNestedBrowserIds.insert(std::pair<ContentParent*, std::set<uint64_t> >(this, ids));
+    } else {
+        iter->second.insert(*id);
+    }
+    return true;
+}
+
+bool
+ContentParent::RecvDeallocateLayerTreeId(const uint64_t& id)
+{
+    IDMap::iterator iter = sNestedBrowserIds.find(this);
+    if (iter != sNestedBrowserIds.end() &&
+        iter->second.find(id) != iter->second.end()) {
+        CompositorParent::DeallocateLayerTreeId(id);
+    } else {
+        // You can't deallocate layer tree ids that you didn't allocate
+        KillHard();
+    }
+    return true;
 }
 
 namespace {
