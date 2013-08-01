@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace net {
 
+extern std::map<uint64_t, nsCOMPtr<nsIAuthPromptCallback> > sCallbackMap;
+
 // Used to override channel Private Browsing status if needed.
 enum PBOverrideStatus {
   kPBOverride_Unset = 0,
@@ -32,13 +34,6 @@ public:
   MOZ_WARN_UNUSED_RESULT
   static const char *
   GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
-                      PBrowserParent* aBrowser,
-                      uint32_t* aAppId,
-                      bool* aInBrowserElement);
-
-  MOZ_WARN_UNUSED_RESULT
-  static const char *
-  GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
                       PContentParent* aBrowser,
                       uint32_t* aAppId,
                       bool* aInBrowserElement);
@@ -52,7 +47,7 @@ public:
    */
   MOZ_WARN_UNUSED_RESULT
   static const char*
-  CreateChannelLoadContext(PBrowserParent* aBrowser,
+  CreateChannelLoadContext(const PBrowserOrId& aBrowser,
                            PContentParent* aContent,
                            const SerializedLoadContext& aSerialized,
                            nsCOMPtr<nsILoadContext> &aResult);
@@ -69,12 +64,12 @@ public:
 
 protected:
   virtual PHttpChannelParent*
-    AllocPHttpChannelParent(PBrowserParent*, const SerializedLoadContext&,
+    AllocPHttpChannelParent(const PBrowserOrId&, const SerializedLoadContext&,
                             const HttpChannelCreationArgs& aOpenArgs);
   virtual bool
     RecvPHttpChannelConstructor(
                       PHttpChannelParent* aActor,
-                      PBrowserParent* aBrowser,
+                      const PBrowserOrId& aBrowser,
                       const SerializedLoadContext& aSerialized,
                       const HttpChannelCreationArgs& aOpenArgs);
   virtual bool DeallocPHttpChannelParent(PHttpChannelParent*);
@@ -82,17 +77,17 @@ protected:
   virtual PWyciwygChannelParent* AllocPWyciwygChannelParent();
   virtual bool DeallocPWyciwygChannelParent(PWyciwygChannelParent*);
   virtual PFTPChannelParent*
-    AllocPFTPChannelParent(PBrowserParent* aBrowser,
+    AllocPFTPChannelParent(const PBrowserOrId& aBrowser,
                            const SerializedLoadContext& aSerialized,
                            const FTPChannelCreationArgs& aOpenArgs);
   virtual bool
     RecvPFTPChannelConstructor(
                       PFTPChannelParent* aActor,
-                      PBrowserParent* aBrowser,
+                      const PBrowserOrId& aBrowser,
                       const SerializedLoadContext& aSerialized,
                       const FTPChannelCreationArgs& aOpenArgs);
   virtual bool DeallocPFTPChannelParent(PFTPChannelParent*);
-  virtual PWebSocketParent* AllocPWebSocketParent(PBrowserParent* browser,
+  virtual PWebSocketParent* AllocPWebSocketParent(const PBrowserOrId& browser,
                                                   const SerializedLoadContext& aSerialized);
   virtual bool DeallocPWebSocketParent(PWebSocketParent*);
   virtual PTCPSocketParent* AllocPTCPSocketParent();
@@ -126,6 +121,12 @@ protected:
   CloneProtocol(Channel* aChannel,
                 mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
 
+  virtual bool RecvOnAuthAvailable(const uint64_t& aCallbackId,
+                                   const nsString& aUser,
+                                   const nsString& aPassword,
+                                   const nsString& aDomain);
+  virtual bool RecvOnAuthCancelled(const uint64_t& aCallbackId,
+                                   const bool& aUserCancel);
 private:
   nsCString mCoreAppsBasePath;
   nsCString mWebAppsBasePath;

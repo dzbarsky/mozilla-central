@@ -27,7 +27,7 @@ public:
 
 protected:
   virtual PHttpChannelChild*
-    AllocPHttpChannelChild(PBrowserChild*, const SerializedLoadContext&,
+    AllocPHttpChannelChild(const PBrowserOrId&, const SerializedLoadContext&,
                            const HttpChannelCreationArgs& aOpenArgs);
   virtual bool DeallocPHttpChannelChild(PHttpChannelChild*);
   virtual PCookieServiceChild* AllocPCookieServiceChild();
@@ -35,11 +35,11 @@ protected:
   virtual PWyciwygChannelChild* AllocPWyciwygChannelChild();
   virtual bool DeallocPWyciwygChannelChild(PWyciwygChannelChild*);
   virtual PFTPChannelChild*
-    AllocPFTPChannelChild(PBrowserChild* aBrowser,
+    AllocPFTPChannelChild(const PBrowserOrId& aBrowser,
                           const SerializedLoadContext& aSerialized,
                           const FTPChannelCreationArgs& aOpenArgs);
   virtual bool DeallocPFTPChannelChild(PFTPChannelChild*);
-  virtual PWebSocketChild* AllocPWebSocketChild(PBrowserChild*, const SerializedLoadContext&);
+  virtual PWebSocketChild* AllocPWebSocketChild(const PBrowserOrId&, const SerializedLoadContext&);
   virtual bool DeallocPWebSocketChild(PWebSocketChild*);
   virtual PTCPSocketChild* AllocPTCPSocketChild();
   virtual bool DeallocPTCPSocketChild(PTCPSocketChild*);
@@ -50,6 +50,10 @@ protected:
   virtual PRemoteOpenFileChild* AllocPRemoteOpenFileChild(const URIParams&,
                                                           const OptionalURIParams&);
   virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*);
+  virtual bool RecvAsyncAuthPromptForNestedFrame(const uint64_t& aNestedFrameId,
+                                                 const nsCString& aUri,
+                                                 const nsString& aRealm,
+                                                 const uint64_t& aCallbackId);
 };
 
 /**

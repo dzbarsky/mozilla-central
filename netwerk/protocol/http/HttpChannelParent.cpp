@@ -22,6 +22,8 @@
 #include "nsIApplicationCacheService.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "nsIAuthInformation.h"
+#include "nsIAuthPromptCallback.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -29,7 +31,7 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding,
+HttpChannelParent::HttpChannelParent(const PBrowserOrId& aBrowser,
                                      nsILoadContext* aLoadContext,
                                      PBOverrideStatus aOverrideStatus)
   : mIPCClosed(false)
@@ -41,6 +43,7 @@ HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding,
   , mReceivedRedirect2Verify(false)
   , mPBOverride(aOverrideStatus)
   , mLoadContext(aLoadContext)
+  , mNestedFrameId(0)
 {
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
   nsCOMPtr<nsIHttpProtocolHandler> dummyInitializer =
@@ -49,7 +52,11 @@ HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding,
   MOZ_ASSERT(gHttpHandler);
   mHttpHandler = gHttpHandler;
 
-  mTabParent = static_cast<mozilla::dom::TabParent*>(iframeEmbedding);
+  if (aBrowser.type() == PBrowserOrId::TPBrowserParent) {
+    mTabParent = static_cast<mozilla::dom::TabParent*>(aBrowser.get_PBrowserParent());
+  } else {
+    mNestedFrameId = aBrowser.get_uint64_t();
+  }
 }
 
 HttpChannelParent::~HttpChannelParent()
@@ -96,12 +103,13 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
 // HttpChannelParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS6(HttpChannelParent,
+NS_IMPL_ISUPPORTS7(HttpChannelParent,
                    nsIInterfaceRequestor,
                    nsIProgressEventSink,
                    nsIRequestObserver,
                    nsIStreamListener,
                    nsIParentChannel,
+                   nsIAuthPromptProvider,
                    nsIParentRedirectingChannel)
 
 //-----------------------------------------------------------------------------
@@ -113,10 +121,10 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 {
   if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
       aIID.Equals(NS_GET_IID(nsISecureBrowserUI))) {
-    if (!mTabParent)
-      return NS_NOINTERFACE;
 
-    return mTabParent->QueryInterface(aIID, result);
+    if (mTabParent) {
+      return mTabParent->QueryInterface(aIID, result);
+    }
   }
 
   // Only support nsILoadContext if child channel's callbacks did too
@@ -641,6 +649,77 @@ HttpChannelParent::CompleteRedirect(bool succeeded)
   }
 
   mRedirectChannel = nullptr;
+  return NS_OK;
+}
+
+/*
+ * This implementation of nsIAuthPrompt2 is used for nested remote iframes that
+ * want an auth prompt.  This class lives in the parent process and informs the
+ * NeckoChild that we want an auth prompt, which forwards the request to the
+ * TabParent in the remote iframe that contains the nested iframe
+ */
+class NestedFrameAuthPrompt MOZ_FINAL : public nsIAuthPrompt2
+{
+public:
+  NestedFrameAuthPrompt(PNeckoParent* aParent, uint64_t aNestedFrameId)
+    : mNeckoParent(aParent)
+    , mNestedFrameId(aNestedFrameId)
+  { }
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD PromptAuth(nsIChannel*, uint32_t, nsIAuthInformation*, bool*)
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD AsyncPromptAuth(nsIChannel* aChannel, nsIAuthPromptCallback* callback,
+                             nsISupports*, uint32_t,
+                             nsIAuthInformation* aInfo, nsICancelable**)
+  {
+    static uint64_t callbackId = 0;
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsAutoCString spec;
+    if (uri) {
+      rv = uri->GetSpec(spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    nsString realm;
+    rv = aInfo->GetRealm(realm);
+    NS_ENSURE_SUCCESS(rv, rv);
+    callbackId++;
+    if (mNeckoParent->SendAsyncAuthPromptForNestedFrame(mNestedFrameId,
+                                                        spec,
+                                                        realm,
+                                                        callbackId)) {
+      sCallbackMap[callbackId] = nsCOMPtr<nsIAuthPromptCallback>(callback);
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_IMETHOD AsyncPromptAuth2(nsIChannel*, nsIDOMElement*,
+                              nsIAuthPromptCallback*, nsISupports*,
+                              uint32_t, nsIAuthInformation*, nsICancelable**) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+protected:
+  PNeckoParent* mNeckoParent;
+  uint64_t mNestedFrameId;
+};
+
+NS_IMPL_ISUPPORTS1(NestedFrameAuthPrompt, nsIAuthPrompt2);
+
+NS_IMETHODIMP
+HttpChannelParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
+                                 void** aResult)
+{
+  nsCOMPtr<nsIAuthPrompt2> prompt = new NestedFrameAuthPrompt(Manager(), mNestedFrameId);
+  prompt.forget(aResult);
   return NS_OK;
 }
 

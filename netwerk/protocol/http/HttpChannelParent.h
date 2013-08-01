@@ -9,13 +9,13 @@
 #define mozilla_net_HttpChannelParent_h
 
 #include "nsHttp.h"
-#include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/net/PHttpChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsHttpChannel.h"
+#include "nsIAuthPromptProvider.h"
 
 class nsICacheEntry;
 class nsIAssociatedContentSecurity;
@@ -30,11 +30,13 @@ class TabParent;
 namespace net {
 
 class HttpChannelParentListener;
+class PBrowserOrId;
 
 class HttpChannelParent : public PHttpChannelParent
                         , public nsIParentRedirectingChannel
                         , public nsIProgressEventSink
                         , public nsIInterfaceRequestor
+                        , public nsIAuthPromptProvider
 {
 public:
   NS_DECL_ISUPPORTS
@@ -44,8 +46,9 @@ public:
   NS_DECL_NSIPARENTREDIRECTINGCHANNEL
   NS_DECL_NSIPROGRESSEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIAUTHPROMPTPROVIDER
 
-  HttpChannelParent(mozilla::dom::PBrowserParent* iframeEmbedding,
+  HttpChannelParent(const PBrowserOrId& aBrowser,
                     nsILoadContext* aLoadContext,
                     PBOverrideStatus aStatus);
   virtual ~HttpChannelParent();
@@ -122,6 +125,7 @@ private:
 
   nsCOMPtr<nsILoadContext> mLoadContext;
   nsRefPtr<nsHttpHandler>  mHttpHandler;
+  uint64_t mNestedFrameId;
 };
 
 } // namespace net

@@ -280,6 +280,7 @@ TabChild::TabChild(nsIContentChild* aManager, const TabContext& aContext, uint32
   , mTriedBrowserInit(false)
   , mOrientation(eScreenOrientation_PortraitPrimary)
   , mUpdateHitRegion(false)
+  , mUniqueId(0)
 {
 }
 
@@ -1188,6 +1189,9 @@ TabChild::ActorDestroy(ActorDestroyReason why)
     static_cast<nsFrameMessageManager*>
       (mTabChildGlobal->mMessageManager.get())->Disconnect();
     mTabChildGlobal->mMessageManager = nullptr;
+  }
+  if (Id() != 0) {
+    net::sTabChildMap.erase(Id());
   }
 }
 

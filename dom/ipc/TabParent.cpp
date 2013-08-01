@@ -19,6 +19,7 @@
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
@@ -55,12 +56,17 @@
 #include "JavaScriptParent.h"
 #include "TabChild.h"
 #include "nsNetCID.h"
+#include "nsIAuthInformation.h"
+#include "nsIAuthPromptCallback.h"
+#include "nsAuthInformationHolder.h"
+#include "nsICancelable.h"
 #include <algorithm>
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
+using namespace mozilla::net;
 using namespace mozilla::services;
 using namespace mozilla::widget;
 using namespace mozilla::dom::indexedDB;
@@ -1321,7 +1327,7 @@ TabParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
 // This method is largely copied from nsDocShell::GetAuthPrompt
 NS_IMETHODIMP
 TabParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
-                          void** aResult)
+                         void** aResult)
 {
   // we're either allowing auth, or it's a proxy request
   nsresult rv;
@@ -1620,6 +1626,141 @@ TabParent::RecvContentReceivedTouch(const bool& aPreventDefault)
     rfp->ContentReceivedTouch(aPreventDefault);
   }
   return true;
+}
+
+class FakeChannel MOZ_FINAL : public nsIChannel,
+                              public nsIAuthPromptCallback,
+                              public nsIInterfaceRequestor,
+                              public nsILoadContext
+{
+public:
+  FakeChannel(const nsCString& aUri, uint64_t aCallbackId, Element* aElement)
+    : mCallbackId(aCallbackId)
+    , mElement(aElement)
+  {
+    NS_NewURI(getter_AddRefs(mUri), aUri);
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_IMETHOD GetName(nsACString&) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD IsPending(bool*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetStatus(nsresult*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD Cancel(nsresult) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD Suspend() { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD Resume() { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetLoadGroup(nsILoadGroup**) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetLoadGroup(nsILoadGroup*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetLoadFlags(nsLoadFlags) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetLoadFlags(nsLoadFlags*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetOriginalURI(nsIURI**) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetOriginalURI(nsIURI*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetURI(nsIURI** aUri) {
+    NS_IF_ADDREF(mUri);
+    *aUri = mUri;
+    return NS_OK;
+  }
+  NS_IMETHOD GetOwner(nsISupports**) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetOwner(nsISupports*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor** aRequestor) {
+    NS_ADDREF(*aRequestor = this);
+    return NS_OK;
+  }
+  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor*)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetSecurityInfo(nsISupports**) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetContentType(nsACString&) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetContentType(const nsACString&) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetContentCharset(nsACString&) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetContentCharset(const nsACString&) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetContentLength(int64_t*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetContentLength(int64_t) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD Open(nsIInputStream**) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD AsyncOpen(nsIStreamListener*, nsISupports*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetContentDisposition(uint32_t*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetContentDisposition(uint32_t) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetContentDispositionFilename(nsAString&) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetContentDispositionFilename(const nsAString&)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetContentDispositionHeader(nsACString&) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD OnAuthAvailable(nsISupports *aContext, nsIAuthInformation *aAuthInfo);
+  NS_IMETHOD OnAuthCancelled(nsISupports *aContext, bool userCancel);
+  NS_IMETHOD GetInterface(const nsIID & uuid, void **result)
+  {
+    return QueryInterface(uuid, result);
+  }
+  NS_IMETHOD GetAssociatedWindow(nsIDOMWindow**) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetTopWindow(nsIDOMWindow**) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetTopFrameElement(nsIDOMElement** aElement)
+  {
+    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(mElement);
+    elem.forget(aElement);
+    return NS_OK;
+  }
+  NS_IMETHOD GetNestedFrameId(uint64_t*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD IsAppOfType(uint32_t, bool*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetIsContent(bool*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetUsePrivateBrowsing(bool*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetUsePrivateBrowsing(bool) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD SetPrivateBrowsing(bool) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetIsInBrowserElement(bool*) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetAppId(uint32_t*) { return NS_ERROR_NOT_IMPLEMENTED; }
+
+protected:
+  nsCOMPtr<nsIURI> mUri;
+  uint64_t mCallbackId;
+  nsCOMPtr<Element> mElement;
+};
+
+NS_IMPL_ISUPPORTS5(FakeChannel, nsIChannel, nsIAuthPromptCallback,
+                   nsIRequest, nsIInterfaceRequestor, nsILoadContext);
+
+bool
+TabParent::RecvAsyncAuthPrompt(const nsCString& aUri,
+                               const nsString& aRealm,
+                               const uint64_t& aCallbackId)
+{
+  nsCOMPtr<nsIAuthPrompt2> authPrompt;
+  GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL,
+                NS_GET_IID(nsIAuthPrompt2),
+                getter_AddRefs(authPrompt));
+  nsRefPtr<FakeChannel> channel = new FakeChannel(aUri, aCallbackId, mFrameElement);
+  uint32_t promptFlags = nsIAuthInformation::AUTH_HOST;
+
+  nsRefPtr<nsAuthInformationHolder> holder =
+    new nsAuthInformationHolder(promptFlags, aRealm,
+                                EmptyCString());
+
+  uint32_t level = nsIAuthPrompt2::LEVEL_NONE;
+  nsCOMPtr<nsICancelable> dummy;
+  nsresult rv =
+    authPrompt->AsyncPromptAuth(channel, channel, nullptr,
+                                level, holder, getter_AddRefs(dummy));
+
+  return rv == NS_OK;
+}
+
+NS_IMETHODIMP
+FakeChannel::OnAuthAvailable(nsISupports *aContext, nsIAuthInformation *aAuthInfo)
+{
+  nsAuthInformationHolder* holder =
+    static_cast<nsAuthInformationHolder*>(aAuthInfo);
+
+  if (!gNeckoChild->SendOnAuthAvailable(mCallbackId,
+                                        holder->User(),
+                                        holder->Password(),
+                                        holder->Domain())) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FakeChannel::OnAuthCancelled(nsISupports *aContext, bool userCancel)
+{
+  if (!gNeckoChild->SendOnAuthCancelled(mCallbackId, userCancel)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 } // namespace tabs

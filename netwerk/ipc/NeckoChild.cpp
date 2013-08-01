@@ -8,6 +8,7 @@
 #include "nsHttp.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/WyciwygChannelChild.h"
@@ -17,8 +18,7 @@
 #include "mozilla/dom/network/TCPSocketChild.h"
 #include "mozilla/dom/network/TCPServerSocketChild.h"
 
-using mozilla::dom::TCPSocketChild;
-using mozilla::dom::TCPServerSocketChild;
+using namespace mozilla::dom;
 
 namespace mozilla {
 namespace net {
@@ -63,7 +63,7 @@ void NeckoChild::DestroyNeckoChild()
 }
 
 PHttpChannelChild*
-NeckoChild::AllocPHttpChannelChild(PBrowserChild* browser,
+NeckoChild::AllocPHttpChannelChild(const PBrowserOrId& browser,
                                    const SerializedLoadContext& loadContext,
                                    const HttpChannelCreationArgs& aOpenArgs)
 {
@@ -84,7 +84,7 @@ NeckoChild::DeallocPHttpChannelChild(PHttpChannelChild* channel)
 }
 
 PFTPChannelChild*
-NeckoChild::AllocPFTPChannelChild(PBrowserChild* aBrowser,
+NeckoChild::AllocPFTPChannelChild(const PBrowserOrId& aBrowser,
                                   const SerializedLoadContext& aSerialized,
                                   const FTPChannelCreationArgs& aOpenArgs)
 {
@@ -140,7 +140,7 @@ NeckoChild::DeallocPWyciwygChannelChild(PWyciwygChannelChild* channel)
 }
 
 PWebSocketChild*
-NeckoChild::AllocPWebSocketChild(PBrowserChild* browser,
+NeckoChild::AllocPWebSocketChild(const PBrowserOrId& browser,
                                  const SerializedLoadContext& aSerialized)
 {
   NS_NOTREACHED("AllocPWebSocketChild should not be called");
@@ -202,6 +202,23 @@ NeckoChild::DeallocPRemoteOpenFileChild(PRemoteOpenFileChild* aChild)
 {
   RemoteOpenFileChild *p = static_cast<RemoteOpenFileChild*>(aChild);
   p->ReleaseIPDLReference();
+  return true;
+}
+
+bool
+NeckoChild::RecvAsyncAuthPromptForNestedFrame(const uint64_t& aNestedFrameId,
+                                              const nsCString& aUri,
+                                              const nsString& aRealm,
+                                              const uint64_t& aCallbackId)
+{
+  std::map<uint64_t, nsRefPtr<TabChild> >::iterator iter =
+    sTabChildMap.find(aNestedFrameId);
+  if (iter == sTabChildMap.end()) {
+    MOZ_CRASH();
+    return false;
+  }
+  TabChild* tabChild = iter->second;
+  tabChild->SendAsyncAuthPrompt(aUri, aRealm, aCallbackId);
   return true;
 }
 

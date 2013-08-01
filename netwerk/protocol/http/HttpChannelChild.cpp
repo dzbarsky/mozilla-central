@@ -9,6 +9,7 @@
 #include "HttpLog.h"
 
 #include "nsHttp.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/HttpChannelChild.h"
@@ -799,6 +800,21 @@ HttpChannelChild::Redirect3Complete()
 // HttpChannelChild::nsIChildChannel
 //-----------------------------------------------------------------------------
 
+std::map<uint64_t, nsRefPtr<TabChild> > sTabChildMap;
+
+static uint64_t
+GetTabChildId(TabChild* aTabChild)
+{
+  if (aTabChild->Id() != 0) {
+    return aTabChild->Id();
+  }
+  static uint64_t sId = 0;
+  sId++;
+  aTabChild->SetId(sId);
+  sTabChildMap[sId] = aTabChild;
+  return sId;
+}
+
 NS_IMETHODIMP
 HttpChannelChild::ConnectParent(uint32_t id)
 {
@@ -817,8 +833,15 @@ HttpChannelChild::ConnectParent(uint32_t id)
   AddIPDLReference();
 
   HttpChannelConnectArgs connectArgs(id);
+  PBrowserOrId browser;
+  if (!tabChild ||
+      static_cast<ContentChild*>(gNeckoChild->Manager()) == tabChild->Manager()) {
+    browser = tabChild;
+  } else {
+    browser = GetTabChildId(tabChild);
+  }
   if (!gNeckoChild->
-        SendPHttpChannelConstructor(this, tabChild,
+        SendPHttpChannelConstructor(this, browser,
                                     IPC::SerializedLoadContext(this),
                                     connectArgs)) {
     return NS_ERROR_FAILURE;
@@ -1085,7 +1108,14 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
 
-  gNeckoChild->SendPHttpChannelConstructor(this, tabChild,
+  PBrowserOrId browser;
+  if (!tabChild ||
+      static_cast<ContentChild*>(gNeckoChild->Manager()) == tabChild->Manager()) {
+    browser = tabChild;
+  } else {
+    browser = GetTabChildId(tabChild);
+  }
+  gNeckoChild->SendPHttpChannelConstructor(this, browser,
                                            IPC::SerializedLoadContext(this),
                                            openArgs);
 
