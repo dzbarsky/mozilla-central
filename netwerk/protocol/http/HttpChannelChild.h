@@ -32,6 +32,8 @@
 namespace mozilla {
 namespace net {
 
+extern std::map<uint64_t, nsRefPtr<dom::TabChild> > sTabChildMap;
+
 class HttpChannelChild : public PHttpChannelChild
                        , public HttpBaseChannel
                        , public HttpAsyncAborter<HttpChannelChild>

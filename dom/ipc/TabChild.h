@@ -50,6 +50,10 @@ namespace layers {
 struct TextureFactoryIdentifier;
 }
 
+namespace net {
+extern std::map<uint64_t, nsRefPtr<dom::TabChild> > sTabChildMap;
+}
+
 namespace dom {
 
 class TabChild;
@@ -180,6 +184,15 @@ public:
     virtual ~TabChild();
 
     bool IsRootContentDocument();
+
+    uint64_t Id() {
+        return mUniqueId;
+    }
+
+    void SetId(uint64_t aId) {
+        MOZ_ASSERT(mUniqueId == 0);
+        mUniqueId = aId;
+    }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBBROWSERCHROME
@@ -494,6 +507,7 @@ private:
     bool mTriedBrowserInit;
     ScreenOrientation mOrientation;
     bool mUpdateHitRegion;
+    uint64_t mUniqueId;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

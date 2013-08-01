@@ -304,6 +304,15 @@ parent:
      */
     UpdateScrollOffset(uint32_t aPresShellId, ViewID aViewId, CSSIntPoint aScrollOffset);
 
+    /**
+     * Brings up the auth prompt dialog.
+     * Called when this is the PBrowserParent for a nested remote iframe.
+     * aCallbackId corresponds to an nsIAuthPromptCallback that lives in the
+     * root process.  It will be passed back to the root process with either the
+     * OnAuthAvailable or OnAuthCancelled message.
+     */
+    AsyncAuthPrompt(nsCString uri, nsString realm, uint64_t aCallbackId);
+
     __delete__();
 
 child:

@@ -4,10 +4,10 @@
 
 #include "nsISupports.idl"
 
+interface nsIAuthInformation;
 interface nsIAuthPromptCallback;
 interface nsIChannel;
 interface nsICancelable;
-interface nsIAuthInformation;
 
 /**
  * An interface allowing to prompt for a username and password. This interface
