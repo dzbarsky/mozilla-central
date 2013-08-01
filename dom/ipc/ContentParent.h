@@ -492,6 +492,9 @@ private:
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
+    virtual bool RecvAllocateLayerTreeId(uint64_t* id) MOZ_OVERRIDE;
+    virtual bool RecvDeallocateLayerTreeId(const uint64_t& id) MOZ_OVERRIDE;
+
     // If you add strong pointers to cycle collected objects here, be sure to
     // release these objects in ShutDownProcess.  See the comment there for more
     // details.
