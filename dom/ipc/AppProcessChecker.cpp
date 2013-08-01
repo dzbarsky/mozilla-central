@@ -61,7 +61,8 @@ AssertAppProcess(PBrowserParent* aActor,
 
   if (!aValid) {
     printf_stderr("Security problem: Content process does not have `%s'.  It will be killed.\n", aCapability);
-    ContentParent* process = tab->Manager();
+    // XXXdz what if the manager isn't a content parent?
+    ContentParent* process = static_cast<ContentParent*>(tab->Manager());
     process->KillHard();
   }
   return aValid;

@@ -50,8 +50,8 @@ class ContentChild : public PContentChild
 public:
     ContentChild();
     virtual ~ContentChild();
-    nsrefcnt AddRef() { return 1; }
-    nsrefcnt Release() { return 1; }
+    NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
+    NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
     struct AppInfo
     {
