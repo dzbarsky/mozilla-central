@@ -24,7 +24,7 @@ namespace mozilla {
 namespace dom {
 
 class nsIContentParent;
-class ContentChild;
+class nsIContentChild;
 
 namespace ipc {
 
@@ -108,7 +108,7 @@ struct BlobTraits<Child>
   typedef mozilla::dom::ChildBlobConstructorParams ConstructorParamsType;
   typedef mozilla::dom::ParentBlobConstructorParams
           OtherSideConstructorParamsType;
-  typedef mozilla::dom::ContentChild ConcreteContentManagerType;
+  typedef mozilla::dom::nsIContentChild ConcreteContentManagerType;
 
 
   class BaseType : public ProtocolType

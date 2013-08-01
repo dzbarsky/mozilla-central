@@ -187,7 +187,7 @@ MessageManagerCallback::BuildClonedMessageDataForParent(nsIContentParent* aParen
 }
 
 bool
-MessageManagerCallback::BuildClonedMessageDataForChild(ContentChild* aChild,
+MessageManagerCallback::BuildClonedMessageDataForChild(nsIContentChild* aChild,
                                                        const StructuredCloneData& aData,
                                                        ClonedMessageData& aClonedData)
 {
