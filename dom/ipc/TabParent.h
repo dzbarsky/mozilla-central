@@ -41,6 +41,7 @@ namespace dom {
 class ClonedMessageData;
 class ContentParent;
 class Element;
+class nsIContentParent;
 struct StructuredCloneData;
 
 class ContentDialogParent : public PContentDialogParent {};
@@ -55,7 +56,7 @@ class TabParent : public PBrowserParent
     typedef mozilla::layout::ScrollingBehavior ScrollingBehavior;
 
 public:
-    TabParent(ContentParent* aManager, const TabContext& aContext);
+    TabParent(nsIContentParent* aManager, const TabContext& aContext);
     virtual ~TabParent();
     Element* GetOwnerElement() const { return mFrameElement; }
     void SetOwnerElement(Element* aElement);
@@ -236,7 +237,7 @@ public:
     static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
     static TabParent* GetFrom(nsIContent* aContent);
 
-    ContentParent* Manager() { return mManager; }
+    nsIContentParent* Manager() { return mManager; }
 
 protected:
     bool ReceiveMessage(const nsString& aMessage,
@@ -318,7 +319,7 @@ private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;
     already_AddRefed<nsIWidget> GetWidget() const;
     layout::RenderFrameParent* GetRenderFrame();
-    nsRefPtr<ContentParent> mManager;
+    nsRefPtr<nsIContentParent> mManager;
     void TryCacheDPIAndScale();
 
     // When true, we create a pan/zoom controller for our frame and

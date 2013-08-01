@@ -9,7 +9,7 @@
 
 #include "AppProcessChecker.h"
 #include "ContentChild.h"
-#include "ContentParent.h"
+#include "mozilla/dom/nsIContentParent.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsError.h"
@@ -36,6 +36,7 @@
 #include "nsDOMLists.h"
 #include "nsPrintfCString.h"
 #include <algorithm>
+#include "nsXULAppAPI.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -178,7 +179,7 @@ BuildClonedMessageData(typename BlobTraits<Flavor>::ConcreteContentManagerType* 
 }
 
 bool
-MessageManagerCallback::BuildClonedMessageDataForParent(ContentParent* aParent,
+MessageManagerCallback::BuildClonedMessageDataForParent(nsIContentParent* aParent,
                                                         const StructuredCloneData& aData,
                                                         ClonedMessageData& aClonedData)
 {
@@ -1669,7 +1670,7 @@ NS_NewParentProcessMessageManager(nsIMessageBroadcaster** aResult)
 
 
 nsFrameMessageManager*
-nsFrameMessageManager::NewProcessMessageManager(mozilla::dom::ContentParent* aProcess)
+nsFrameMessageManager::NewProcessMessageManager(nsIContentParent* aProcess)
 {
   if (!nsFrameMessageManager::sParentProcessManager) {
      nsCOMPtr<nsIMessageBroadcaster> dummy =
