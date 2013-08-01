@@ -240,7 +240,7 @@ TabChild::PreloadSlowThings()
 }
 
 /*static*/ already_AddRefed<TabChild>
-TabChild::Create(ContentChild* aManager, const TabContext &aContext, uint32_t aChromeFlags)
+TabChild::Create(nsIContentChild* aManager, const TabContext &aContext, uint32_t aChromeFlags)
 {
     if (sPreallocatedTab &&
         sPreallocatedTab->mChromeFlags == aChromeFlags &&
@@ -262,7 +262,7 @@ TabChild::Create(ContentChild* aManager, const TabContext &aContext, uint32_t aC
 }
 
 
-TabChild::TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t aChromeFlags)
+TabChild::TabChild(nsIContentChild* aManager, const TabContext& aContext, uint32_t aChromeFlags)
   : TabContext(aContext)
   , mRemoteFrame(nullptr)
   , mManager(aManager)
@@ -2391,14 +2391,13 @@ TabChild::DoSendBlockingMessage(JSContext* aCx,
                                 InfallibleTArray<nsString>* aJSONRetVal,
                                 bool aIsSync)
 {
-  ContentChild* cc = Manager();
   ClonedMessageData data;
-  if (!BuildClonedMessageDataForChild(cc, aData, data)) {
+  if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
   if (sCpowsEnabled) {
-    if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    if (!Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
       return false;
     }
   }
@@ -2413,14 +2412,13 @@ TabChild::DoSendAsyncMessage(JSContext* aCx,
                              const StructuredCloneData& aData,
                              JS::Handle<JSObject *> aCpows)
 {
-  ContentChild* cc = Manager();
   ClonedMessageData data;
-  if (!BuildClonedMessageDataForChild(cc, aData, data)) {
+  if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
   if (sCpowsEnabled) {
-    if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    if (!Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
       return false;
     }
   }

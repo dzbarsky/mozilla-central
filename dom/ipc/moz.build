@@ -31,6 +31,7 @@ EXPORTS.mozilla.dom += [
     'TabContext.h',
     'TabMessageUtils.h',
     'TabParent.h',
+    'nsIContentChild.h',
     'nsIContentParent.h',
 ]
 
@@ -56,6 +57,7 @@ CPP_SOURCES += [
     'TabChild.cpp',
     'TabContext.cpp',
     'TabMessageUtils.cpp',
+    'nsIContentChild.cpp',
     'nsIContentParent.cpp',
 ]
 

@@ -11,6 +11,8 @@
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "nsWeakPtr.h"
+#include "mozilla/dom/nsIContentChild.h"
+
 
 struct ChromePackage;
 class nsIDOMBlob;
@@ -42,6 +44,7 @@ class PStorageChild;
 class ClonedMessageData;
 
 class ContentChild : public PContentChild
+                   , public nsIContentChild
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
@@ -50,6 +53,7 @@ class ContentChild : public PContentChild
 public:
     ContentChild();
     virtual ~ContentChild();
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
     NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
     NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
@@ -239,10 +243,16 @@ public:
     bool IsForApp() { return mIsForApp; }
     bool IsForBrowser() { return mIsForBrowser; }
 
-    BlobChild* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
+    virtual PBlobChild*
+    SendPBlobConstructor(PBlobChild* actor,
+                         const BlobConstructorParams& params) MOZ_OVERRIDE;
 
 protected:
     virtual bool RecvPBrowserConstructor(PBrowserChild* actor,
+                                         const IPCTabContext& context,
+                                         const uint32_t& chromeFlags);
+
+    virtual bool SendPBrowserConstructor(PBrowserChild* actor,
                                          const IPCTabContext& context,
                                          const uint32_t& chromeFlags);
 
