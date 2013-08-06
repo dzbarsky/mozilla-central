@@ -27,6 +27,7 @@
 #include "nsRuleProcessorData.h"
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
+#include "WebAnimationManager.h"
 #include "nsEventStates.h"
 #include "nsStyleSheetService.h"
 #include "mozilla/dom/Element.h"
@@ -178,6 +179,7 @@ nsStyleSet::Init(nsPresContext *aPresContext)
 
   GatherRuleProcessors(eAnimationSheet);
   GatherRuleProcessors(eTransitionSheet);
+  GatherRuleProcessors(eWebAnimationSheet);
 }
 
 nsresult
@@ -351,6 +353,10 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
     case eAnimationSheet:
       MOZ_ASSERT(mSheets[aType].Count() == 0);
       mRuleProcessors[aType] = PresContext()->AnimationManager();
+      return NS_OK;
+    case eWebAnimationSheet:
+      MOZ_ASSERT(mSheets[aType].Count() == 0);
+      mRuleProcessors[aType] = PresContext()->GetWebAnimationManager();
       return NS_OK;
     case eTransitionSheet:
       MOZ_ASSERT(mSheets[aType].Count() == 0);
@@ -748,6 +754,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                      aPseudoType),
                   "Pseudo mismatch");
 
+
   if (aVisitedRuleNode == aRuleNode) {
     // No need to force creation of a visited style in this case.
     aVisitedRuleNode = nullptr;
@@ -1025,6 +1032,9 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   aRuleWalker->SetLevel(eAnimationSheet, false, false);
   (*aCollectorFunc)(mRuleProcessors[eAnimationSheet], aData);
 
+  aRuleWalker->SetLevel(eWebAnimationSheet, false, false);
+  (*aCollectorFunc)(mRuleProcessors[eWebAnimationSheet], aData);
+
   if (haveAnyImportantScopedRules) {
     for (uint32_t i = lastScopedRNs.Length(); i-- != 0; ) {
       aRuleWalker->SetLevel(eScopedDocSheet, true, false);
@@ -1154,6 +1164,7 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   if (mRuleProcessors[eOverrideSheet])
     (*aFunc)(mRuleProcessors[eOverrideSheet], aData);
   (*aFunc)(mRuleProcessors[eAnimationSheet], aData);
+  (*aFunc)(mRuleProcessors[eWebAnimationSheet], aData);
   (*aFunc)(mRuleProcessors[eTransitionSheet], aData);
 }
 

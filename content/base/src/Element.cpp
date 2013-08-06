@@ -132,6 +132,7 @@
 #include "nsITextControlElement.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "WebAnimationManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3444,6 +3445,104 @@ Element::InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
       destination->InsertBefore(*fragment, GetNextSibling(), aError);
       break;
   }
+}
+
+already_AddRefed<Animation>
+Element::Animate(JSContext* cx, const Sequence<JSObject*>& keyframes,
+                 double aTiming, ErrorResult& rv)
+{
+  nsIPresShell *shell = OwnerDoc()->GetShell();
+  if (!shell) {
+    rv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsPresContext* pres = shell->GetPresContext();
+  if (!pres) {
+    rv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  WebAnimationManager* manager = pres->GetWebAnimationManager();
+  nsRefPtr<Animation> anim = manager->AddAnimation(this, aTiming);
+
+  nsDataHashtable<nsUint64HashKey, PropertyAnimation*>& propertyAnimations =
+    anim->mPropertyAnimations;
+
+  // Lots of manual JSAPI ahead.  Brace yourself!
+  for (uint32_t i = 0; i < keyframes.Length(); i++) {
+    JSObject* keyframe = keyframes[i];
+    JS::Rooted<JS::Value> offset(cx);
+    if (!JS_GetProperty(cx, keyframe, "offset", &offset)) {
+      return anim.forget();
+    }
+    if (!offset.isNumber()) {
+      NS_ASSERTION(false, "Please provide a float offset value.  Otherwise we get very confused because the timing model is hacked up!");
+      return anim.forget();
+    }
+
+    double offsetValue = offset.toNumber();
+
+    JS::AutoIdArray props(cx, JS_Enumerate(cx, keyframe));
+    if (!props) {
+      return anim.forget();
+    }
+
+    for (uint32_t i = 0; i < props.length(); i++){
+      JS::Rooted<JS::Value> cssPropertyName(cx);
+      if (!JS_IdToValue(cx, props[i], cssPropertyName.address()) ||
+          !cssPropertyName.isString()) {
+        return anim.forget();
+      }
+
+      FakeDependentString propertyName;
+      if (!ConvertJSValueToString(cx, cssPropertyName, &cssPropertyName,
+                                  eStringify, eStringify, propertyName)) {
+        return anim.forget();
+      }
+      nsCSSProperty property = nsCSSProps::LookupProperty(propertyName,
+                                                          nsCSSProps::eEnabled);
+
+      if (property == eCSSProperty_UNKNOWN) {
+        continue;
+      }
+      JS::Rooted<JS::Value> val(cx);
+      if (!JS_GetPropertyById(cx, keyframe, props[i], &val)) {
+        return anim.forget();
+      }
+      nsStyleAnimation::Value animValue;
+
+      // Ideally we would use CSSParserImpl::ParseSingleValueProperty() here.
+      // However, that involves creating a fake nsCSSScanner that contains our
+      // string, or something.  I haven't looked too carefully but this will
+      // need some refactoring of the scanner/parser if we want to get it
+      // right.
+
+      if (val.isNumber()) {
+        animValue.SetFloatValue(val.toNumber());
+      } else {
+        NS_ASSERTION(false, "Don't know how to handle this type of value.  Floats only for now, please!");
+        return anim.forget();
+      }
+
+      PropertyAnimation* propAnim = propertyAnimations.Get(property);
+      if (!propAnim) {
+        propAnim = new PropertyAnimation();
+        propertyAnimations.Put(property, propAnim);
+      }
+      PropertyAnimationFrame* frame = propAnim->mKeyframes.AppendElement();
+      frame->mOffset = offsetValue;
+      frame->mValue = animValue;
+    }
+  }
+
+  return anim.forget();
+}
+
+void
+Element::AddAnimation(Animation* aAnimation) {
+  mAnimations.AppendElement(aAnimation);
+  SetMayHaveAnimations();
 }
 
 nsIEditor*

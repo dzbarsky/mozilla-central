@@ -191,5 +191,16 @@ partial interface Element {
   NodeList  querySelectorAll(DOMString selectors);
 };
 
+// http://dev.w3.org/fxtf/web-animations/#extensions-to-the-element-interface
+partial interface Element {
+  [Throws]
+  Animation animate(sequence<object> keyframes, double timing);
+  //Animation           animate (
+  //                             (AnimationEffect or CustomEffect or OneOrMoreKeyframes)? effect,
+  //                             optional (double or TimingInput)? timing = null);
+  //sequence<Animation> getCurrentAnimations ();
+  //sequence<Player>    getCurrentPlayers ();
+};
+
 Element implements ChildNode;
 Element implements ParentNode;

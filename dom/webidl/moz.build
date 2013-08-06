@@ -18,6 +18,7 @@ PREPROCESSED_WEBIDL_FILES = [
 WEBIDL_FILES = [
     'AbstractWorker.webidl',
     'AnalyserNode.webidl',
+    'Animation.webidl',
     'AnimationEvent.webidl',
     'AppNotificationServiceOptions.webidl',
     'ArchiveReader.webidl',

@@ -252,6 +252,7 @@ class nsStyleSet
     eStyleAttrSheet,
     eOverrideSheet, // CSS
     eAnimationSheet,
+    eWebAnimationSheet,
     eTransitionSheet,
     eSheetTypeCount
     // be sure to keep the number of bits in |mDirty| below and in

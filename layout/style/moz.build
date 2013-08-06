@@ -121,6 +121,7 @@ CPP_SOURCES += [
     'nsStyleTransformMatrix.cpp',
     'nsStyleUtil.cpp',
     'nsTransitionManager.cpp',
+    'WebAnimationManager.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

@@ -317,7 +317,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                      ? ea->mIterationCount : -1;
   int direction = ea->mDirection;
 
-  Animation* animation = aLayer->AddAnimation(startTime, duration,
+  layers::Animation* animation = aLayer->AddAnimation(startTime, duration,
                                               iterations, direction,
                                               aProperty, aData);
 

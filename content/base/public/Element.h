@@ -106,6 +106,7 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET);
 namespace mozilla {
 namespace dom {
 
+class Animation;
 class Link;
 class UndoManager;
 class DOMRect;
@@ -120,15 +121,10 @@ class Element : public FragmentOrElement
 {
 public:
 #ifdef MOZILLA_INTERNAL_API
-  Element(already_AddRefed<nsINodeInfo> aNodeInfo) :
-    FragmentOrElement(aNodeInfo),
-    mState(NS_EVENT_STATE_MOZ_READONLY)
-  {
-    NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE,
-                      "Bad NodeType in aNodeInfo");
-    SetIsElement();
-  }
+  Element(already_AddRefed<nsINodeInfo> aNodeInfo);
 #endif // MOZILLA_INTERNAL_API
+
+  virtual ~Element();
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ELEMENT_IID)
 
@@ -731,6 +727,12 @@ public:
   void SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError);
   void InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
                           ErrorResult& aError);
+  already_AddRefed<Animation> Animate(JSContext* aCx, const Sequence<JSObject*>& keyframes,
+                                      double aTiming, ErrorResult& rv);
+
+  nsTArray<nsRefPtr<Animation> >& GetAnimations() { return mAnimations; }
+
+  void AddAnimation(Animation* aAnimation);
 
   //----------------------------------------
 
@@ -1127,6 +1129,7 @@ private:
   void GetMarkup(bool aIncludeSelf, nsAString& aMarkup);
 
   // Data members
+  nsTArray<nsRefPtr<Animation > > mAnimations;
   nsEventStates mState;
 };
 
