@@ -6,6 +6,8 @@
 #ifndef mozilla_dom_Animation_h
 #define mozilla_dom_Animation_h
 
+#include "mozilla/dom/TimedItem.h"
+
 #include "mozilla/Attributes.h"
 #include "AnimationCommon.h"
 
@@ -29,7 +31,7 @@ public:
   nsTArray<PropertyAnimationFrame> mKeyframes;
 };
 
-class Animation MOZ_FINAL : public nsWrapperCache
+class Animation MOZ_FINAL : public TimedItem
 {
   friend class ::WebAnimationManager;
   friend class Element;
@@ -45,8 +47,8 @@ public:
   virtual ~Animation()
   { }
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Animation)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(Animation)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(Animation, TimedItem)
 
   void EnsureStyleRuleFor(TimeStamp aRefreshTime);
 

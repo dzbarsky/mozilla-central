@@ -64,6 +64,7 @@ EXPORTS.mozilla.dom += [
     'Link.h',
     'NodeIterator.h',
     'Text.h',
+    'TimedItem.h',
     'TreeWalker.h',
 ]
 
@@ -158,6 +159,7 @@ CPP_SOURCES += [
     'nsXMLContentSerializer.cpp',
     'nsXMLHttpRequest.cpp',
     'nsXMLNameSpaceMap.cpp',
+    'TimedItem.cpp',
 ]
 
 EXTRA_COMPONENTS += [

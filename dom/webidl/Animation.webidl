@@ -17,7 +17,7 @@ typedef Element AnimationTarget;
               (AnimationEffect or CustomEffect or OneOrMoreKeyframes)? effect,
               optional (unrestricted double or TimingInput)? timing = null)]
 */
-interface Animation /*: TimedItem */{
+interface Animation : TimedItem {
 //             attribute (AnimationEffect or CustomEffect)? effect;
     readonly attribute AnimationTarget?                   target;
     [Creator]

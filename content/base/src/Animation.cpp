@@ -14,8 +14,11 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(Animation, mElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Animation, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Animation, Release)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Animation)
+NS_INTERFACE_MAP_END_INHERITING(TimedItem)
+
+NS_IMPL_ADDREF_INHERITED(Animation, TimedItem)
+NS_IMPL_RELEASE_INHERITED(Animation, TimedItem)
 
 JSObject*
 Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
