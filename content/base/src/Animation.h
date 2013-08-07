@@ -59,6 +59,11 @@ public:
     return mElement;
   }
 
+  already_AddRefed<Animation> Clone() {
+    nsRefPtr<Animation> anim = new Animation(mElement);
+    return anim.forget();
+  }
+
   Element* GetParentObject() {
     return mElement;
   }

@@ -20,5 +20,6 @@ typedef Element AnimationTarget;
 interface Animation /*: TimedItem */{
 //             attribute (AnimationEffect or CustomEffect)? effect;
     readonly attribute AnimationTarget?                   target;
-    //Animation clone ();
+    [Creator]
+    Animation clone ();
 };
