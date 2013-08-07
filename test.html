@@ -1,0 +1,14 @@
+<html>
+<body>
+<div id="f"> FOOPY!!!!</div>
+<script>
+function display() {
+var s = document.getElementById("f");
+s.animate([{opacity: 1, offset: 0},
+           {opacity: 0, offset: 0.5},
+           {offset: 1, opacity: 1}  ],
+           2);
+}
+setTimeout(display, 2000);
+
+</script>

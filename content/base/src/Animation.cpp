@@ -7,6 +7,8 @@
 #include "mozilla/dom/AnimationBinding.h"
 #include "nsStyleAnimation.h"
 
+using mozilla::css::AnimValuesStyleRule;
+
 namespace mozilla {
 namespace dom {
 
@@ -19,6 +21,49 @@ JSObject*
 Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return AnimationBinding::Wrap(aCx, aScope, this);
+}
+
+struct InterpolationData {
+  AnimValuesStyleRule* mStyleRule;
+  double mPosition;
+};
+
+static PLDHashOperator
+InterpolateProperties(const uint64_t& aProperty,
+                      PropertyAnimation* aAnimation,
+                      void* aUserArg)
+{
+  InterpolationData* data = static_cast<InterpolationData*>(aUserArg);
+  NS_ASSERTION(aAnimation->mKeyframes.Length() >= 2,
+               "not enough keyframes! need to implement timing model stuff");
+  nsStyleAnimation::Value* val =
+    data->mStyleRule->AddEmptyValue(nsCSSProperty(aProperty));
+
+  printf_stderr("\nposition: %f, opacity: computing...\n", data->mPosition);
+
+  uint32_t currentIndex = 0;
+  float startOffset, endOffset;
+  nsStyleAnimation::Value startValue, endValue;
+  do {
+    startOffset = aAnimation->mKeyframes[currentIndex].mOffset;
+    endOffset = aAnimation->mKeyframes[currentIndex+1].mOffset;
+    startValue = aAnimation->mKeyframes[currentIndex].mValue;
+    endValue = aAnimation->mKeyframes[currentIndex+1].mValue;
+    currentIndex++;
+    printf_stderr("\nstartoff: %f, endoff: %f\n", startOffset, endOffset);
+  } while ((currentIndex + 1) < aAnimation->mKeyframes.Length() &&
+           data->mPosition > aAnimation->mKeyframes[currentIndex].mOffset);
+
+  float positionInSegment = (data->mPosition - startOffset) / (endOffset - startOffset);
+
+#ifdef DEBUG
+  bool result =
+#endif
+    nsStyleAnimation::Interpolate(nsCSSProperty(aProperty), startValue, endValue,
+                                  positionInSegment, *val);
+  NS_ABORT_IF_FALSE(result, "interpolate must succeed now");
+  printf_stderr("\nposition: %f, opacity: %f\n", data->mPosition, val->GetFloatValue());
+  return PL_DHASH_NEXT;
 }
 
 void
@@ -47,19 +92,12 @@ Animation::EnsureStyleRuleFor(TimeStamp aRefreshTime)
       mNeedsRefreshes = true;
     }
 
-    nsStyleAnimation::Value *val =
-      mStyleRule->AddEmptyValue(eCSSProperty_opacity);
+    printf_stderr("\nposition in ensurestyle %f\n", valuePosition);
+    InterpolationData data;
+    data.mStyleRule = mStyleRule;
+    data.mPosition = valuePosition;
 
-     nsStyleAnimation::Value zero, one;
-     zero.SetFloatValue(0);
-     one.SetFloatValue(1);
-
-#ifdef DEBUG
-    bool result =
-#endif
-      nsStyleAnimation::Interpolate(eCSSProperty_opacity, one, zero,
-                                    valuePosition, *val);
-    NS_ABORT_IF_FALSE(result, "interpolate must succeed now");
+    mPropertyAnimations.EnumerateRead(InterpolateProperties, &data);
   }
 }
 
