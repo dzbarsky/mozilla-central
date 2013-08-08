@@ -19,7 +19,7 @@ public:
   SeqGroup(nsISupports* aOwner,
            const Nullable<Sequence<OwningNonNull<TimedItem> > >& aChildren,
            const TimingInput& aTiming)
-    : TimingGroup(mOwner, aChildren, aTiming)
+    : TimingGroup(aOwner, aChildren, aTiming)
   {
   }
 
