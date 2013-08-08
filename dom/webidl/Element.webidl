@@ -195,6 +195,8 @@ partial interface Element {
 partial interface Element {
   [Throws]
   Animation animate(sequence<object> keyframes, optional TimingInput timing);
+  [Throws]
+  Animation animate(sequence<object> keyframes, double timing);
   //Animation           animate (
   //                             (AnimationEffect or CustomEffect or OneOrMoreKeyframes)? effect,
   //                             optional (double or TimingInput)? timing = null);

@@ -132,6 +132,7 @@
 #include "nsITextControlElement.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/TimingInputBinding.h"
 #include "WebAnimationManager.h"
 
 using namespace mozilla;
@@ -3445,6 +3446,15 @@ Element::InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
       destination->InsertBefore(*fragment, GetNextSibling(), aError);
       break;
   }
+}
+
+already_AddRefed<Animation>
+Element::Animate(JSContext* cx, const Sequence<JSObject*>& keyframes,
+                 const double& aTiming, ErrorResult& rv)
+{
+  TimingInputInitializer timing;
+  timing.mIterationDuration = aTiming;
+  return Animate(cx, keyframes, timing, rv);
 }
 
 already_AddRefed<Animation>
