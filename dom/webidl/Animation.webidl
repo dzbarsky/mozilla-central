@@ -13,10 +13,6 @@
 //typedef (Element or PseudoElementReference) AnimationTarget;
 typedef Element AnimationTarget;
 
-enum FillMode { "none", "forwards", "backwards", "both" };
-
-enum PlaybackDirection { "normal", "reverse", "alternate", "alternate-reverse" };
-
 [Constructor (AnimationTarget? element,
               sequence<object> oneOrMoreKeyframes,
               /*(AnimationEffect or CustomEffect or OneOrMoreKeyframes)?  effect,*/

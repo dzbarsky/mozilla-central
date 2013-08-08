@@ -4,11 +4,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dev.w3.org/fxtf/web-animations/#idl-def-Animation
+ * http://dev.w3.org/fxtf/web-animations/#idl-def-TimingInput
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
+
+enum FillMode { "none", "forwards", "backwards", "both" };
+
+enum PlaybackDirection { "normal", "reverse", "alternate", "alternate-reverse" };
 
 dictionary TimingInput {
   double                             startDelay = 0;
@@ -16,6 +20,7 @@ dictionary TimingInput {
   double                             iterationStart = 0.0;
   unrestricted double                iterationCount = 1.0;
   unrestricted double iterationDuration = 2.0;
+  unrestricted double activeDuration = 2.0;
   //(unrestricted double or DOMString) iterationDuration = "auto";
   //(unrestricted double or DOMString) activeDuration = "auto";
   double                             playbackRate = 1.0;

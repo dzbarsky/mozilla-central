@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dev.w3.org/fxtf/web-animations/#idl-def-Animation
+ * http://dev.w3.org/fxtf/web-animations/#idl-def-Timing
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -12,13 +12,13 @@
 
 interface Timing {
   attribute double                             startDelay;
-//  attribute FillMode                           fillMode;
+  attribute FillMode                           fillMode;
   attribute double                             iterationStart;
   attribute unrestricted double                iterationCount;
   attribute double iterationDuration;
 //  attribute (unrestricted double or DOMString) iterationDuration;
 //  attribute (unrestricted double or DOMString) activeDuration;
   attribute double                             playbackRate;
-//  attribute PlaybackDirection                  direction;
-//  attribute DOMString                          timingFunction;
+  attribute PlaybackDirection                  direction;
+  attribute DOMString                          timingFunction;
 };

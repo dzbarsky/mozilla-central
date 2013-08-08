@@ -8,12 +8,10 @@
 
 #include "nsWrapperCache.h"
 #include "mozilla/dom/TimedItem.h"
+#include "mozilla/dom/TimingInputBinding.h"
 
 namespace mozilla {
 namespace dom {
-
-class TimedItem;
-class TimingInput;
 
 class Timing MOZ_FINAL : public nsWrapperCache
 {
@@ -39,6 +37,14 @@ public:
 
   void SetStartDelay(double aDelay) {
     mStartDelay = aDelay;
+  }
+
+  enum FillMode FillMode() {
+    return mFillMode;
+  }
+
+  void SetFillMode(enum FillMode aMode) {
+    mFillMode = aMode;
   }
 
   double IterationStart() {
@@ -73,13 +79,32 @@ public:
     mPlaybackRate = aRate;
   }
 
+  PlaybackDirection Direction() {
+    return mDirection;
+  }
+
+  void SetDirection(PlaybackDirection aDirection) {
+    mDirection = aDirection;
+  }
+
+  void GetTimingFunction(nsString& aFunction) {
+    aFunction = mFunction;
+  }
+
+  void SetTimingFunction(const nsAString& aFunction) {
+    mFunction = aFunction;
+  }
+
 protected:
   nsRefPtr<TimedItem> mTimedItem;
   double mStartDelay;
+  enum FillMode mFillMode;
   double mIterationStart;
   double mIterationCount;
   double mIterationDuration;
   double mPlaybackRate;
+  PlaybackDirection mDirection;
+  nsString mFunction;
 };
 
 } // namespace dom

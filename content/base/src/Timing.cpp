@@ -5,9 +5,7 @@
 
 #include "mozilla/dom/Timing.h"
 
-#include "mozilla/dom/TimedItem.h"
 #include "mozilla/dom/TimingBinding.h"
-#include "mozilla/dom/TimingInputBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -30,23 +28,31 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Timing, Release)
 Timing::Timing(TimedItem* aTimedItem, const TimingInput& aTiming)
   : mTimedItem(aTimedItem)
   , mStartDelay(aTiming.mStartDelay)
+  , mFillMode(aTiming.fillMode)
   , mIterationStart(aTiming.mIterationStart)
   , mIterationCount(aTiming.mIterationCount)
   , mIterationDuration(aTiming.mIterationDuration)
+  , mDirection(aTiming.direction)
   , mPlaybackRate(aTiming.mPlaybackRate)
 {
   SetIsDOMBinding();
+  // XXXdz support other timing functions
+  mFunction.AssignLiteral("linear");
 }
 
 Timing::Timing(Timing* aOther)
   : mTimedItem(aOther->mTimedItem)
   , mStartDelay(aOther->mStartDelay)
+  , mFillMode(aOther->mFillMode)
   , mIterationStart(aOther->mIterationStart)
   , mIterationCount(aOther->mIterationCount)
   , mIterationDuration(aOther->mIterationDuration)
+  , mDirection(aOther->mDirection)
   , mPlaybackRate(aOther->mPlaybackRate)
 {
   SetIsDOMBinding();
+  // XXXdz support other timing functions
+  mFunction.AssignLiteral("linear");
 }
 
 }
