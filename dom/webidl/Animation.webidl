@@ -13,10 +13,17 @@
 //typedef (Element or PseudoElementReference) AnimationTarget;
 typedef Element AnimationTarget;
 
-/*[Constructor (AnimationTarget? element,
-              (AnimationEffect or CustomEffect or OneOrMoreKeyframes)? effect,
-              optional (unrestricted double or TimingInput)? timing = null)]
-*/
+enum FillMode { "none", "forwards", "backwards", "both" };
+
+enum PlaybackDirection { "normal", "reverse", "alternate", "alternate-reverse" };
+
+[Constructor (AnimationTarget? element,
+              sequence<object> oneOrMoreKeyframes,
+              /*(AnimationEffect or CustomEffect or OneOrMoreKeyframes)?  effect,*/
+              optional TimingInput timing)]
+
+              //optional (unrestricted double or TimingInput?) timing = null)]
+
 interface Animation : TimedItem {
 //             attribute (AnimationEffect or CustomEffect)? effect;
     readonly attribute AnimationTarget?                   target;

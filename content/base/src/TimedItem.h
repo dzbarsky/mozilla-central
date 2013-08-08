@@ -11,8 +11,24 @@
 namespace mozilla {
 namespace dom {
 
+class Timing;
+class TimingInput;
+
 class TimedItem : public nsDOMEventTargetHelper
 {
+public:
+  TimedItem(const TimingInput& aTiming);
+  TimedItem(TimedItem* aOther);
+
+  ~TimedItem();
+
+  // WebIDL
+  already_AddRefed<Timing> Specified() const;
+
+  TimeStamp mStartTime;
+  TimeDuration mDuration;
+protected:
+  nsRefPtr<Timing> mTiming;
 };
 
 } // namespace dom

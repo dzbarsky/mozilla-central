@@ -3449,7 +3449,7 @@ Element::InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
 
 already_AddRefed<Animation>
 Element::Animate(JSContext* cx, const Sequence<JSObject*>& keyframes,
-                 double aTiming, ErrorResult& rv)
+                 const TimingInput& aTiming, ErrorResult& rv)
 {
   nsIPresShell *shell = OwnerDoc()->GetShell();
   if (!shell) {

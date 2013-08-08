@@ -391,6 +391,8 @@ WEBIDL_FILES = [
     'TimedItem.webidl',
     'TimeEvent.webidl',
     'TimeRanges.webidl',
+    'Timing.webidl',
+    'TimingInput.webidl',
     'Touch.webidl',
     'TouchEvent.webidl',
     'TouchList.webidl',

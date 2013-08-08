@@ -26,6 +26,16 @@ Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return AnimationBinding::Wrap(aCx, aScope, this);
 }
 
+/* static */ already_AddRefed<Animation>
+Animation::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
+                       Element* aTarget, Sequence<JSObject*> aKeyframes,
+                       const TimingInput& aTiming, ErrorResult& rv)
+{
+  nsRefPtr<Animation> anim = new Animation(aTarget, aTiming);
+
+  return anim.forget();
+}
+
 struct InterpolationData {
   AnimValuesStyleRule* mStyleRule;
   double mPosition;

@@ -65,6 +65,7 @@ EXPORTS.mozilla.dom += [
     'NodeIterator.h',
     'Text.h',
     'TimedItem.h',
+    'Timing.h',
     'TreeWalker.h',
 ]
 
@@ -160,6 +161,7 @@ CPP_SOURCES += [
     'nsXMLHttpRequest.cpp',
     'nsXMLNameSpaceMap.cpp',
     'TimedItem.cpp',
+    'Timing.cpp',
 ]
 
 EXTRA_COMPONENTS += [

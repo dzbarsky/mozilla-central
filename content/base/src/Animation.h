@@ -17,6 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class Element;
+class TimingInput;
 
 class PropertyAnimationFrame
 {
@@ -36,11 +37,19 @@ class Animation MOZ_FINAL : public TimedItem
   friend class ::WebAnimationManager;
   friend class Element;
 public:
-  Animation(Element* aElement)
-    : mElement(aElement)
+  Animation(Element* aElement, const TimingInput& aTiming)
+    : TimedItem(aTiming)
+    , mElement(aElement)
     , mNeedsRefreshes(true)
   {
-    SetIsDOMBinding();
+    mPropertyAnimations.Init(1);
+  }
+
+  Animation(Animation* aAnimation)
+    : TimedItem(aAnimation)
+    , mElement(aAnimation->mElement)
+    , mNeedsRefreshes(true)
+  {
     mPropertyAnimations.Init(1);
   }
 
@@ -57,12 +66,17 @@ public:
   }
 
   // WebIDL
+  static already_AddRefed<Animation>
+    Constructor(const GlobalObject& aGlobal, JSContext* aCx,
+                Element* aTarget, Sequence<JSObject*> aKeyframes,
+                const TimingInput& aTiming, ErrorResult& rv);
+
   Element* GetTarget() {
     return mElement;
   }
 
   already_AddRefed<Animation> Clone() {
-    nsRefPtr<Animation> anim = new Animation(mElement);
+    nsRefPtr<Animation> anim = new Animation(this);
     return anim.forget();
   }
 
@@ -77,8 +91,6 @@ protected:
   nsRefPtr<mozilla::css::AnimValuesStyleRule> mStyleRule;
   TimeStamp mStyleRuleRefreshTime;
 
-  TimeStamp mStartTime;
-  TimeDuration mDuration;
   nsRefPtr<Element> mElement;
   nsDataHashtable<nsUint64HashKey, PropertyAnimation*> mPropertyAnimations;
 

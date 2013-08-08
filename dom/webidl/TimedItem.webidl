@@ -17,9 +17,12 @@ interface TimedItem : EventTarget {
     readonly attribute double?             localTime;
     readonly attribute unsigned long?      currentIteration;
 
+    */
+
     // Specified timing
     readonly attribute Timing              specified;
 
+    /*
     // Calculated timing
     readonly attribute double              startTime;
     readonly attribute unrestricted double iterationDuration;
