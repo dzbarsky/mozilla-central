@@ -4,21 +4,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dev.w3.org/fxtf/web-animations/#idl-def-TimingGroup
+ * http://dev.w3.org/fxtf/web-animations/#idl-def-TimingItemList
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
-interface TimingGroup : TimedItem {
-  [Constant]
-  readonly attribute TimedItemList children;
-  [Pure]
-  readonly attribute TimedItem?    firstChild;
-  [Pure]
-  readonly attribute TimedItem?    lastChild;
-  /*
-  void prepend (TimedItem... items);
-  void append (TimedItem... items);
-  */
+interface TimedItemList {
+  readonly attribute unsigned long length;
+  getter TimedItem? item (unsigned long index);
 };

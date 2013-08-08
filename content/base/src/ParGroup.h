@@ -46,6 +46,10 @@ public:
     return group.forget();
   }
 
+  virtual already_AddRefed<TimedItem> CloneInternal() MOZ_OVERRIDE {
+    return Clone().downcast<TimedItem>();
+  }
+
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 };

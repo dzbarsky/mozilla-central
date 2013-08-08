@@ -67,6 +67,7 @@ EXPORTS.mozilla.dom += [
     'SeqGroup.h',
     'Text.h',
     'TimedItem.h',
+    'TimedItemList.h',
     'Timing.h',
     'TimingGroup.h',
     'TreeWalker.h',
@@ -166,6 +167,7 @@ CPP_SOURCES += [
     'ParGroup.cpp',
     'SeqGroup.cpp',
     'TimedItem.cpp',
+    'TimedItemList.cpp',
     'Timing.cpp',
     'TimingGroup.cpp',
 ]

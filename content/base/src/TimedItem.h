@@ -25,6 +25,8 @@ public:
   // WebIDL
   already_AddRefed<Timing> Specified() const;
 
+  virtual already_AddRefed<TimedItem> CloneInternal() = 0;
+
   TimeStamp mStartTime;
   TimeDuration mDuration;
 protected:

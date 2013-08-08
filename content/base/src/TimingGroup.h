@@ -11,48 +11,34 @@
 namespace mozilla {
 namespace dom {
 
+class TimedItemList;
+
 class TimingGroup : public TimedItem
 {
 public:
   TimingGroup(nsISupports* aOwner,
               const Nullable<Sequence<OwningNonNull<TimedItem> > >& aChildren,
-              const TimingInput& aTiming)
-    : TimedItem(aTiming)
-    , mOwner(aOwner)
-  {
-    if (!aChildren.IsNull()) {
-      const Sequence<OwningNonNull<TimedItem> >& items = aChildren.Value();
-      for (uint32_t i = 0; i < items.Length(); i++) {
-        mChildren.AppendElement(items[i].get());
-      }
-    }
-  }
+              const TimingInput& aTiming);
 
-  TimingGroup(TimingGroup* aOther)
-    : TimedItem(aOther)
-    , mOwner(aOther->mOwner)
-    , mChildren(aOther->mChildren)
-  {
-  }
+  TimingGroup(TimingGroup* aOther);
+
+  virtual ~TimingGroup();
 
   // WebIDL
   nsISupports* GetParentObject() {
     return mOwner;
   }
 
-  already_AddRefed<TimedItem> GetFirstChild() {
-    nsRefPtr<TimedItem> child = mChildren.IsEmpty() ? nullptr : mChildren[0];
-    return child.forget();
+  TimedItemList* Children() {
+    return mChildren;
   }
 
-  already_AddRefed<TimedItem> GetLastChild() {
-    nsRefPtr<TimedItem> child = mChildren.IsEmpty() ? nullptr : mChildren[mChildren.Length() - 1];
-    return child.forget();
-  }
+  TimedItem* GetFirstChild();
+  TimedItem* GetLastChild();
 
 protected:
   nsCOMPtr<nsISupports> mOwner;
-  nsTArray<nsRefPtr<TimedItem> > mChildren;
+  nsRefPtr<TimedItemList> mChildren;
 };
 
 } // namespace dom

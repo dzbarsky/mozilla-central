@@ -6,6 +6,7 @@
 #include "mozilla/dom/ParGroup.h"
 
 #include "mozilla/dom/ParGroupBinding.h"
+#include "mozilla/dom/TimedItemList.h"
 #include "mozilla/dom/Timing.h"
 
 namespace mozilla {

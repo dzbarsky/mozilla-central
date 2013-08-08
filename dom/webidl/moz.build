@@ -391,6 +391,7 @@ WEBIDL_FILES = [
     'TextTrackCueList.webidl',
     'TextTrackList.webidl',
     'TimedItem.webidl',
+    'TimedItemList.webidl',
     'TimeEvent.webidl',
     'TimeRanges.webidl',
     'Timing.webidl',

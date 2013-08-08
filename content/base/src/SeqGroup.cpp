@@ -6,6 +6,7 @@
 #include "mozilla/dom/SeqGroup.h"
 
 #include "mozilla/dom/SeqGroupBinding.h"
+#include "mozilla/dom/TimedItemList.h"
 #include "mozilla/dom/Timing.h"
 
 namespace mozilla {
