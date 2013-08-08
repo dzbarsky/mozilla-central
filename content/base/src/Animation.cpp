@@ -4,7 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/Animation.h"
+
 #include "mozilla/dom/AnimationBinding.h"
+#include "mozilla/dom/Timing.h"
 #include "nsStyleAnimation.h"
 
 using mozilla::css::AnimValuesStyleRule;
@@ -12,7 +14,9 @@ using mozilla::css::AnimValuesStyleRule;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(Animation, mElement)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(Animation,
+                                        mElement,
+                                        mTiming)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Animation)
 NS_INTERFACE_MAP_END_INHERITING(TimedItem)
