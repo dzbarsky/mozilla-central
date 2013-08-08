@@ -40,6 +40,16 @@ public:
     return mOwner;
   }
 
+  already_AddRefed<TimedItem> GetFirstChild() {
+    nsRefPtr<TimedItem> child = mChildren.IsEmpty() ? nullptr : mChildren[0];
+    return child.forget();
+  }
+
+  already_AddRefed<TimedItem> GetLastChild() {
+    nsRefPtr<TimedItem> child = mChildren.IsEmpty() ? nullptr : mChildren[mChildren.Length() - 1];
+    return child.forget();
+  }
+
 protected:
   nsCOMPtr<nsISupports> mOwner;
   nsTArray<nsRefPtr<TimedItem> > mChildren;
