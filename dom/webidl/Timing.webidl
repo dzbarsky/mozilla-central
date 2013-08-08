@@ -15,9 +15,8 @@ interface Timing {
   attribute FillMode                           fillMode;
   attribute double                             iterationStart;
   attribute unrestricted double                iterationCount;
-  attribute double iterationDuration;
-//  attribute (unrestricted double or DOMString) iterationDuration;
-//  attribute (unrestricted double or DOMString) activeDuration;
+  attribute (unrestricted double or DOMString) iterationDuration;
+  attribute (unrestricted double or DOMString) activeDuration;
   attribute double                             playbackRate;
   attribute PlaybackDirection                  direction;
   attribute DOMString                          timingFunction;

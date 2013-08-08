@@ -13,6 +13,9 @@
 namespace mozilla {
 namespace dom {
 
+class UnrestrictedDoubleOrString;
+class UnrestrictedDoubleOrStringReturnValue;
+
 class Timing MOZ_FINAL : public nsWrapperCache
 {
 public:
@@ -24,14 +27,14 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(Timing)
 
   // WebIDL
-  TimedItem* GetParentObject() {
+  TimedItem* GetParentObject() const {
     return mTimedItem;
   }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  double StartDelay() {
+  double StartDelay() const {
     return mStartDelay;
   }
 
@@ -39,7 +42,7 @@ public:
     mStartDelay = aDelay;
   }
 
-  enum FillMode FillMode() {
+  enum FillMode FillMode() const {
     return mFillMode;
   }
 
@@ -47,7 +50,7 @@ public:
     mFillMode = aMode;
   }
 
-  double IterationStart() {
+  double IterationStart() const {
     return mIterationStart;
   }
 
@@ -55,7 +58,7 @@ public:
     mIterationStart = aStart;
   }
 
-  double IterationCount() {
+  double IterationCount() const {
     return mIterationCount;
   }
 
@@ -63,13 +66,17 @@ public:
     mIterationCount = aCount;
   }
 
-  double IterationDuration() {
+  double IterationDuration() const {
     return mIterationDuration;
   }
 
-  void SetIterationDuration(double aDuration) {
-    mIterationDuration = aDuration;
-  }
+  void GetIterationDuration(UnrestrictedDoubleOrStringReturnValue& aDuration) const;
+
+  void SetIterationDuration(const UnrestrictedDoubleOrString& aDuration);
+
+  void GetActiveDuration(UnrestrictedDoubleOrStringReturnValue& aDuration) const;
+
+  void SetActiveDuration(const UnrestrictedDoubleOrString& aDuration);
 
   double PlaybackRate() {
     return mPlaybackRate;
@@ -102,6 +109,7 @@ protected:
   double mIterationStart;
   double mIterationCount;
   double mIterationDuration;
+  double mActiveDuration;
   double mPlaybackRate;
   PlaybackDirection mDirection;
   nsString mFunction;

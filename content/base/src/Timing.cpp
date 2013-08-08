@@ -6,6 +6,7 @@
 #include "mozilla/dom/Timing.h"
 
 #include "mozilla/dom/TimingBinding.h"
+#include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
 namespace dom {
@@ -28,12 +29,13 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Timing, Release)
 Timing::Timing(TimedItem* aTimedItem, const TimingInput& aTiming)
   : mTimedItem(aTimedItem)
   , mStartDelay(aTiming.mStartDelay)
-  , mFillMode(aTiming.fillMode)
+  , mFillMode(aTiming.mFillMode)
   , mIterationStart(aTiming.mIterationStart)
   , mIterationCount(aTiming.mIterationCount)
   , mIterationDuration(aTiming.mIterationDuration)
-  , mDirection(aTiming.direction)
+  , mActiveDuration(aTiming.mActiveDuration)
   , mPlaybackRate(aTiming.mPlaybackRate)
+  , mDirection(aTiming.mDirection)
 {
   SetIsDOMBinding();
   // XXXdz support other timing functions
@@ -47,12 +49,37 @@ Timing::Timing(Timing* aOther)
   , mIterationStart(aOther->mIterationStart)
   , mIterationCount(aOther->mIterationCount)
   , mIterationDuration(aOther->mIterationDuration)
-  , mDirection(aOther->mDirection)
+  , mActiveDuration(aOther->mActiveDuration)
   , mPlaybackRate(aOther->mPlaybackRate)
+  , mDirection(aOther->mDirection)
 {
   SetIsDOMBinding();
   // XXXdz support other timing functions
   mFunction.AssignLiteral("linear");
+}
+
+void
+Timing::GetIterationDuration(UnrestrictedDoubleOrStringReturnValue& aDuration) const
+{
+  aDuration.SetAsUnrestrictedDouble() = mIterationDuration;
+}
+
+void
+Timing::SetIterationDuration(const UnrestrictedDoubleOrString& aDuration)
+{
+  mIterationDuration = aDuration.GetAsUnrestrictedDouble();
+}
+
+void
+Timing::GetActiveDuration(UnrestrictedDoubleOrStringReturnValue& aDuration) const
+{
+  aDuration.SetAsUnrestrictedDouble() = mActiveDuration;
+}
+
+void
+Timing::SetActiveDuration(const UnrestrictedDoubleOrString& aDuration)
+{
+  mActiveDuration = aDuration.GetAsUnrestrictedDouble();
 }
 
 }
