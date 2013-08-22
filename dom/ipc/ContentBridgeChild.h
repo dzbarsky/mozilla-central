@@ -48,6 +48,10 @@ protected:
   virtual PBrowserChild* AllocPBrowserChild(const IPCTabContext &aContext,
                                             const uint32_t &chromeFlags) MOZ_OVERRIDE;
   virtual bool DeallocPBrowserChild(PBrowserChild*);
+  virtual bool RecvPBrowserConstructor(PBrowserChild* actor,
+                                       const IPCTabContext& context,
+                                       const uint32_t& chromeFlags);
+
 
   virtual mozilla::jsipc::PJavaScriptChild* AllocPJavaScriptChild() MOZ_OVERRIDE;
   virtual bool DeallocPJavaScriptChild(mozilla::jsipc::PJavaScriptChild*) MOZ_OVERRIDE;
