@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ContentBridgeChild.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ipc/Blob.h"
@@ -122,6 +123,16 @@ bool
 ContentBridgeChild::DeallocPBrowserChild(PBrowserChild* aChild)
 {
   return nsIContentChild::DeallocPBrowserChild(aChild);
+}
+
+bool
+ContentBridgeChild::RecvPBrowserConstructor(PBrowserChild* actor,
+                                            const IPCTabContext& context,
+                                            const uint32_t& chromeFlags)
+{
+  return ContentChild::GetSingleton()->RecvPBrowserConstructor(actor,
+                                                               context,
+                                                               chromeFlags);
 }
 
 PBlobChild*

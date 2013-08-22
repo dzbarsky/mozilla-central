@@ -265,11 +265,10 @@ public:
     SendPBlobConstructor(PBlobChild* actor,
                          const BlobConstructorParams& params) MOZ_OVERRIDE;
 
-protected:
     virtual bool RecvPBrowserConstructor(PBrowserChild* actor,
                                          const IPCTabContext& context,
                                          const uint32_t& chromeFlags);
-
+protected:
     virtual bool SendPBrowserConstructor(PBrowserChild* actor,
                                          const IPCTabContext& context,
                                          const uint32_t& chromeFlags);
