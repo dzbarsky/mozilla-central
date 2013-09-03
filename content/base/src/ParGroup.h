@@ -37,7 +37,7 @@ public:
                 const Nullable<Sequence<OwningNonNull<TimedItem> > >& aChildren,
                 const TimingInput& aTiming, ErrorResult& rv)
   {
-    nsRefPtr<ParGroup> group = new ParGroup(aGlobal.Get(), aChildren, aTiming);
+    nsRefPtr<ParGroup> group = new ParGroup(aGlobal.GetAsSupports(), aChildren, aTiming);
     return group.forget();
   }
 

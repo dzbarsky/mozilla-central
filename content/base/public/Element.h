@@ -121,10 +121,7 @@ class DOMRectList;
 class Element : public FragmentOrElement
 {
 public:
-#ifdef MOZILLA_INTERNAL_API
   Element(already_AddRefed<nsINodeInfo> aNodeInfo);
-#endif // MOZILLA_INTERNAL_API
-
   virtual ~Element();
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ELEMENT_IID)

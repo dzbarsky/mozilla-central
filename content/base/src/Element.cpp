@@ -138,6 +138,19 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+Element::Element(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : FragmentOrElement(aNodeInfo)
+  , mState(NS_EVENT_STATE_MOZ_READONLY)
+{
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE,
+                    "Bad NodeType in aNodeInfo");
+  SetIsElement();
+}
+
+Element::~Element()
+{
+}
+
 NS_IMETHODIMP
 Element::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
