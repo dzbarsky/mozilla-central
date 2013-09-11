@@ -42,7 +42,6 @@ public:
     , mElement(aElement)
     , mNeedsRefreshes(true)
   {
-    mPropertyAnimations.Init(1);
   }
 
   Animation(Animation* aAnimation)
@@ -50,7 +49,6 @@ public:
     , mElement(aAnimation->mElement)
     , mNeedsRefreshes(true)
   {
-    mPropertyAnimations.Init(1);
   }
 
   virtual ~Animation()
