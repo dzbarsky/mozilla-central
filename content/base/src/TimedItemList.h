@@ -34,6 +34,11 @@ public:
   void AppendElement(TimedItem* aItem);
   void AppendElement(already_AddRefed<TimedItem> aItem);
 
+  const nsTArray<nsRefPtr<TimedItem> >& AsArray()
+  {
+    return mItems;
+  }
+
   // WebIDL
   nsISupports* GetParentObject() {
     return mOwner;

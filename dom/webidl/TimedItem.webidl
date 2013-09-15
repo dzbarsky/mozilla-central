@@ -28,12 +28,13 @@ interface TimedItem : EventTarget {
     readonly attribute unrestricted double iterationDuration;
     readonly attribute unrestricted double activeDuration;
     readonly attribute unrestricted double endTime;
+    */
 
-    // Timing hierarchy */
+    // Timing hierarchy
     readonly attribute TimingGroup?        parent;
-    /*readonly attribute TimedItem?          previousSibling;
+    readonly attribute TimedItem?          previousSibling;
     readonly attribute TimedItem?          nextSibling;
-    void before (TimedItem... items);
+    /*void before (TimedItem... items);
     void after (TimedItem... items);
     void replace (TimedItem... items);
     void remove ();

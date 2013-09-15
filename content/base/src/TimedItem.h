@@ -32,7 +32,10 @@ public:
   {
     return mGroup;
   }
-  void SetParent(TimingGroup& aParent);
+  void SetParent(TimingGroup* aParent);
+
+  TimedItem* GetPreviousSibling();
+  TimedItem* GetNextSibling();
 
   TimeStamp mStartTime;
   TimeDuration mDuration;

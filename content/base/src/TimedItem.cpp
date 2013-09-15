@@ -5,6 +5,8 @@
 
 #include "mozilla/dom/TimedItem.h"
 
+#include "mozilla/Casting.h"
+#include "mozilla/dom/TimedItemList.h"
 #include "mozilla/dom/Timing.h"
 #include "mozilla/dom/TimingGroup.h"
 
@@ -38,9 +40,44 @@ TimedItem::Specified() const
 }
 
 void
-TimedItem::SetParent(TimingGroup& aParent)
+TimedItem::SetParent(TimingGroup* aParent)
 {
-  mGroup = &aParent;
+  mGroup = aParent;
+}
+
+TimedItem*
+TimedItem::GetPreviousSibling()
+{
+  if (!mGroup) {
+    return nullptr;
+  }
+
+  const nsTArray<nsRefPtr<TimedItem> >& parentItems =
+    mGroup->Children()->AsArray();
+  int32_t index = parentItems.IndexOf(this);
+  MOZ_ASSERT(index >= 0);
+  if (index == 0) {
+    return nullptr;
+  }
+
+  return parentItems[index - 1];
+}
+
+TimedItem*
+TimedItem::GetNextSibling()
+{
+  if (!mGroup) {
+    return nullptr;
+  }
+
+  const nsTArray<nsRefPtr<TimedItem> >& parentItems =
+    mGroup->Children()->AsArray();
+  int32_t index = parentItems.IndexOf(this);
+  if (SafeCast<uint32_t>(index) == parentItems.Length() - 1) {
+    return nullptr;
+  }
+
+  return parentItems[index + 1];
 }
 
 } // namespace dom
