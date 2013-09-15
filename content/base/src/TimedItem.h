@@ -12,6 +12,7 @@ namespace mozilla {
 namespace dom {
 
 class Timing;
+class TimingGroup;
 class TimingInput;
 
 class TimedItem : public nsDOMEventTargetHelper
@@ -27,9 +28,16 @@ public:
 
   virtual already_AddRefed<TimedItem> CloneInternal() = 0;
 
+  TimingGroup* GetParent()
+  {
+    return mGroup;
+  }
+  void SetParent(TimingGroup& aParent);
+
   TimeStamp mStartTime;
   TimeDuration mDuration;
 protected:
+  nsRefPtr<TimingGroup> mGroup;
   nsRefPtr<Timing> mTiming;
 };
 
