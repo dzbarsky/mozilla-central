@@ -20,6 +20,7 @@ interface TimedItem : EventTarget {
     */
 
     // Specified timing
+    [Constant]
     readonly attribute Timing              specified;
 
     /*
