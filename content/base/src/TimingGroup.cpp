@@ -52,5 +52,39 @@ TimingGroup::GetLastChild()
     mChildren->Item(mChildren->Length() - 1);
 }
 
+void
+TimingGroup::Remove(TimedItem* aItem)
+{
+  mChildren->AsArray().RemoveElement(aItem);
+}
+
+void
+TimingGroup::Prepend(const Sequence<OwningNonNull<TimedItem> >& aItems)
+{
+  for (int32_t i = aItems.Length(); i >= 0; i--) {
+    TimedItem* item = aItems[i].get();
+    TimingGroup* oldParent = item->GetParent();
+    if (oldParent) {
+      oldParent->Remove(item);
+    }
+    item->SetParent(this);
+    mChildren->AsArray().InsertElementAt(0, item);
+  }
+}
+
+void
+TimingGroup::Append(const Sequence<OwningNonNull<TimedItem> >& aItems)
+{
+  for (uint32_t i = 0; i < aItems.Length(); i++) {
+    TimedItem* item = aItems[i].get();
+    TimingGroup* oldParent = item->GetParent();
+    if (oldParent) {
+      oldParent->Remove(item);
+    }
+    item->SetParent(this);
+    mChildren->AppendElement(item);
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

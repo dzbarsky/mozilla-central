@@ -24,6 +24,8 @@ public:
 
   virtual ~TimingGroup();
 
+  void Remove(TimedItem* item);
+
   // WebIDL
   nsISupports* GetParentObject() {
     return mOwner;
@@ -35,6 +37,9 @@ public:
 
   TimedItem* GetFirstChild();
   TimedItem* GetLastChild();
+
+  void Prepend(const Sequence<OwningNonNull<TimedItem> >& aItems);
+  void Append(const Sequence<OwningNonNull<TimedItem> >& aItems);
 
 protected:
   nsCOMPtr<nsISupports> mOwner;
