@@ -59,8 +59,18 @@ TimingGroup::Remove(TimedItem* aItem)
 }
 
 void
-TimingGroup::Prepend(const Sequence<OwningNonNull<TimedItem> >& aItems)
+TimingGroup::Prepend(const Sequence<OwningNonNull<TimedItem> >& aItems,
+                     ErrorResult& rv)
 {
+  for (TimingGroup* group = this; group; group = group->GetParent()) {
+    for (uint32_t i = 0; i < aItems.Length(); i++) {
+      if (aItems[i].get() == group) {
+        rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        return;
+      }
+    }
+  }
+
   for (int32_t i = aItems.Length(); i >= 0; i--) {
     TimedItem* item = aItems[i].get();
     TimingGroup* oldParent = item->GetParent();
@@ -73,8 +83,18 @@ TimingGroup::Prepend(const Sequence<OwningNonNull<TimedItem> >& aItems)
 }
 
 void
-TimingGroup::Append(const Sequence<OwningNonNull<TimedItem> >& aItems)
+TimingGroup::Append(const Sequence<OwningNonNull<TimedItem> >& aItems,
+                    ErrorResult& rv)
 {
+  for (TimingGroup* group = this; group; group = group->GetParent()) {
+    for (uint32_t i = 0; i < aItems.Length(); i++) {
+      if (aItems[i].get() == group) {
+        rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        return;
+      }
+    }
+  }
+
   for (uint32_t i = 0; i < aItems.Length(); i++) {
     TimedItem* item = aItems[i].get();
     TimingGroup* oldParent = item->GetParent();

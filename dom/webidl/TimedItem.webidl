@@ -35,11 +35,15 @@ interface TimedItem : EventTarget {
     readonly attribute TimingGroup?        parent;
     readonly attribute TimedItem?          previousSibling;
     readonly attribute TimedItem?          nextSibling;
-    /*void before (TimedItem... items);
+    [Throws]
+    void before (TimedItem... items);
+    [Throws]
     void after (TimedItem... items);
+    [Throws]
     void replace (TimedItem... items);
     void remove ();
 
+    /*
     // Associated player
     readonly attribute Player?             player;
 

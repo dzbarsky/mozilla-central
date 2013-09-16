@@ -36,6 +36,13 @@ public:
 
   TimedItem* GetPreviousSibling();
   TimedItem* GetNextSibling();
+  void Before(const Sequence<OwningNonNull<TimedItem> >& aItems,
+              ErrorResult& rv);
+  void After(const Sequence<OwningNonNull<TimedItem> >& aItems,
+             ErrorResult& rv);
+  void Replace(const Sequence<OwningNonNull<TimedItem> >& aItems,
+               ErrorResult& rv);
+  void Remove();
 
   TimeStamp mStartTime;
   TimeDuration mDuration;

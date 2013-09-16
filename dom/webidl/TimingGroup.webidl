@@ -17,6 +17,8 @@ interface TimingGroup : TimedItem {
   readonly attribute TimedItem?    firstChild;
   [Pure]
   readonly attribute TimedItem?    lastChild;
+  [Throws]
   void prepend (TimedItem... items);
+  [Throws]
   void append (TimedItem... items);
 };

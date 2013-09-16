@@ -38,8 +38,10 @@ public:
   TimedItem* GetFirstChild();
   TimedItem* GetLastChild();
 
-  void Prepend(const Sequence<OwningNonNull<TimedItem> >& aItems);
-  void Append(const Sequence<OwningNonNull<TimedItem> >& aItems);
+  void Prepend(const Sequence<OwningNonNull<TimedItem> >& aItems,
+               ErrorResult& rv);
+  void Append(const Sequence<OwningNonNull<TimedItem> >& aItems,
+              ErrorResult& rv);
 
 protected:
   nsCOMPtr<nsISupports> mOwner;

@@ -80,5 +80,79 @@ TimedItem::GetNextSibling()
   return parentItems[index + 1];
 }
 
+void
+TimedItem::Before(const Sequence<OwningNonNull<TimedItem> >& aItems,
+                  ErrorResult& rv)
+{
+  for (TimingGroup* group = GetParent(); group; group = group->GetParent()) {
+    for (uint32_t i = 0; i < aItems.Length(); i++) {
+      if (aItems[i].get() == group) {
+        rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        return;
+      }
+    }
+  }
+
+  nsTArray<nsRefPtr<TimedItem> >& items = GetParent()->Children()->AsArray();
+  int32_t index = items.IndexOf(this);
+  for (int32_t i = aItems.Length(); i >= 0; i--) {
+    items.InsertElementAt(index, aItems[i].get());
+    aItems[i].get()->SetParent(GetParent());
+  }
+}
+
+void
+TimedItem::After(const Sequence<OwningNonNull<TimedItem> >& aItems,
+                 ErrorResult& rv)
+{
+  for (TimingGroup* group = GetParent(); group; group = group->GetParent()) {
+    for (uint32_t i = 0; i < aItems.Length(); i++) {
+      if (aItems[i].get() == group) {
+        rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        return;
+      }
+    }
+  }
+
+  nsTArray<nsRefPtr<TimedItem> >& items = GetParent()->Children()->AsArray();
+  int32_t index = items.IndexOf(this);
+  for (int32_t i = aItems.Length(); i >= 0; i--) {
+    items.InsertElementAt(index + 1, aItems[i].get());
+    aItems[i].get()->SetParent(GetParent());
+  }
+}
+
+void
+TimedItem::Replace(const Sequence<OwningNonNull<TimedItem> >& aItems,
+                   ErrorResult& rv)
+{
+  for (TimingGroup* group = GetParent(); group; group = group->GetParent()) {
+    for (uint32_t i = 0; i < aItems.Length(); i++) {
+      if (aItems[i].get() == group) {
+        rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        return;
+      }
+    }
+  }
+
+  nsTArray<nsRefPtr<TimedItem> >& items = GetParent()->Children()->AsArray();
+  int32_t index = items.IndexOf(this);
+  for (int32_t i = aItems.Length(); i >= 0; i--) {
+    items.InsertElementAt(index, aItems[i].get());
+    aItems[i].get()->SetParent(GetParent());
+  }
+
+  items.RemoveElement(this);
+  SetParent(nullptr);
+}
+
+void
+TimedItem::Remove()
+{
+  if (mGroup) {
+    mGroup->Remove(this);
+  }
+}
+
 } // namespace dom
 } // namespace mozilla
