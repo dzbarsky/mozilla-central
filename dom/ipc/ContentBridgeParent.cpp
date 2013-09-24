@@ -140,12 +140,5 @@ ContentBridgeParent::GetCPOWManager()
   return actor;
 }
 
-uint64_t
-ContentBridgeParent::ChildID()
-{
-  //xxxdz placeholder...
-  return 0;
-}
-
 } // namespace dom
 } // namespace mozilla

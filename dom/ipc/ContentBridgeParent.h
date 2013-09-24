@@ -16,6 +16,7 @@ namespace dom {
 class ContentBridgeParent : public PContentBridgeParent
                           , public nsIContentParent
 {
+  friend class ContentParent;
 public:
   ContentBridgeParent(Transport* aTransport);
 
@@ -40,9 +41,17 @@ public:
 
   jsipc::JavaScriptParent* GetCPOWManager();
 
-  uint64_t ChildID() MOZ_OVERRIDE;
+  uint64_t ChildID() MOZ_OVERRIDE
+  {
+    return mChildID;
+  }
 
 protected:
+  void SetChildID(uint64_t aId)
+  {
+    mChildID = aId;
+  }
+
   virtual bool RecvSyncMessage(
             const nsString& aMessage,
             const ClonedMessageData& aData,
@@ -73,6 +82,7 @@ protected:
   nsRefPtr<ContentBridgeParent> mSelfRef;
 
   Transport* mTransport; // owned
+  uint64_t mChildID;
 };
 
 } // dom
