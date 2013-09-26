@@ -87,6 +87,7 @@
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "nsSandboxFlags.h"
 #include "JavaScriptParent.h"
+#include "CompositorChild.h"
 
 #include "mozilla/dom/StructuredCloneUtils.h"
 
@@ -1482,6 +1483,13 @@ nsFrameLoader::ShouldUseRemoteProcess()
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_TABS") ||
       Preferences::GetBool("dom.ipc.tabs.disabled", false)) {
+    return false;
+  }
+
+  // Don't try to launch nested children if we don't have OMTC.
+  // They won't render!
+  if (XRE_GetProcessType() == GeckoProcessType_Content &&
+      !CompositorChild::ChildProcessHasCompositor()) {
     return false;
   }
 
