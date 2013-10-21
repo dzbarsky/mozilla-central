@@ -135,6 +135,8 @@
 #include "mozilla/dom/TimingInputBinding.h"
 #include "nsCSSProps.h"
 #include "WebAnimationManager.h"
+#include "nsSMILCSSValueType.h"
+#include "nsJSUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3534,19 +3536,17 @@ Element::Animate(JSContext* cx, const Sequence<JSObject*>& keyframes,
       if (!JS_GetPropertyById(cx, keyframe, props[i], &val)) {
         return anim.forget();
       }
+
       nsStyleAnimation::Value animValue;
-
-      // Ideally we would use CSSParserImpl::ParseSingleValueProperty() here.
-      // However, that involves creating a fake nsCSSScanner that contains our
-      // string, or something.  I haven't looked too carefully but this will
-      // need some refactoring of the scanner/parser if we want to get it
-      // right.
-
       if (val.isNumber()) {
         animValue.SetFloatValue(val.toNumber());
       } else {
-        NS_ASSERTION(false, "Don't know how to handle this type of value.  Floats only for now, please!");
-        return anim.forget();
+        nsDependentJSString str;
+        if (!str.init(cx, val.toString())) {
+          return anim.forget();
+        }
+        nsSMILCSSValueType::ValueFromStringHelper(property, this, pres,
+                                                  str, animValue, nullptr);
       }
 
       PropertyAnimation* propAnim = propertyAnimations.Get(property);

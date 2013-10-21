@@ -42,11 +42,11 @@ public:
     mStartDelay = aDelay;
   }
 
-  enum FillMode Fill() const {
+  FillMode Fill() const {
     return mFillMode;
   }
 
-  void SetFill(enum FillMode aMode) {
+  void SetFill(FillMode aMode) {
     mFillMode = aMode;
   }
 
@@ -117,7 +117,7 @@ public:
 protected:
   nsRefPtr<TimedItem> mTimedItem;
   double mStartDelay;
-  enum FillMode mFillMode;
+  FillMode mFillMode;
   double mIterationStart;
   double mIterationCount;
   double mIterationDuration;

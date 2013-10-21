@@ -11,8 +11,10 @@
 #include "nsISMILType.h"
 #include "nsCSSProperty.h"
 #include "mozilla/Attributes.h"
+#include "nsStyleAnimation.h"
 
 class nsAString;
+class nsPresContext;
 
 namespace mozilla {
 namespace dom {
@@ -83,6 +85,12 @@ public:
                               nsSMILValue& aValue,
                               bool* aIsContextSensitive);
 
+  static bool ValueFromStringHelper(nsCSSProperty aPropID,
+                                    Element* aTargetElement,
+                                    nsPresContext* aPresContext,
+                                    const nsAString& aString,
+                                    nsStyleAnimation::Value& aStyleAnimValue,
+                                    bool* aIsContextSensitive);
   /**
    * Creates a string representation of the given nsSMILValue.
    *

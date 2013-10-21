@@ -332,13 +332,13 @@ GetPresContextForElement(Element* aElem)
 }
 
 // Helper function to parse a string into a nsStyleAnimation::Value
-static bool
-ValueFromStringHelper(nsCSSProperty aPropID,
-                      Element* aTargetElement,
-                      nsPresContext* aPresContext,
-                      const nsAString& aString,
-                      nsStyleAnimation::Value& aStyleAnimValue,
-                      bool* aIsContextSensitive)
+bool
+nsSMILCSSValueType::ValueFromStringHelper(nsCSSProperty aPropID,
+                                          Element* aTargetElement,
+                                          nsPresContext* aPresContext,
+                                          const nsAString& aString,
+                                          nsStyleAnimation::Value& aStyleAnimValue,
+                                          bool* aIsContextSensitive)
 {
   // If value is negative, we'll strip off the "-" so the CSS parser won't
   // barf, and then manually make the parsed value negative.

@@ -8,6 +8,7 @@
 #include "mozilla/dom/AnimationBinding.h"
 #include "mozilla/dom/Timing.h"
 #include "nsStyleAnimation.h"
+#include "nsIFrame.h"
 
 using mozilla::css::AnimValuesStyleRule;
 
@@ -79,7 +80,7 @@ InterpolateProperties(const uint64_t& aProperty,
     nsStyleAnimation::Interpolate(nsCSSProperty(aProperty), startValue, endValue,
                                   positionInSegment, *val);
   NS_ABORT_IF_FALSE(result, "interpolate must succeed now");
-  printf_stderr("\nposition: %f, opacity: %f\n", data->mPosition, val->GetFloatValue());
+  //printf_stderr("\nposition: %f, opacity: %f\n", data->mPosition, val->GetFloatValue());
   return PL_DHASH_NEXT;
 }
 
@@ -115,6 +116,7 @@ Animation::EnsureStyleRuleFor(TimeStamp aRefreshTime)
     data.mPosition = valuePosition;
 
     mPropertyAnimations.EnumerateRead(InterpolateProperties, &data);
+    mElement->GetPrimaryFrame()->InvalidateFrame();
   }
 }
 
