@@ -28,11 +28,11 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Timing, Release)
 
 Timing::Timing(TimedItem* aTimedItem, const TimingInput& aTiming)
   : mTimedItem(aTimedItem)
-  , mStartDelay(aTiming.mStartDelay)
-  , mFillMode(aTiming.mFillMode)
+  , mStartDelay(aTiming.mDelay)
+  , mFillMode(aTiming.mFill)
   , mIterationStart(aTiming.mIterationStart)
-  , mIterationCount(aTiming.mIterationCount)
-  , mIterationDuration(aTiming.mIterationDuration)
+  , mIterationCount(aTiming.mIterations)
+  , mIterationDuration(aTiming.mDuration)
   , mActiveDuration(aTiming.mActiveDuration)
   , mPlaybackRate(aTiming.mPlaybackRate)
   , mDirection(aTiming.mDirection)
@@ -59,19 +59,19 @@ Timing::Timing(Timing* aOther)
 }
 
 void
-Timing::GetIterationDuration(UnrestrictedDoubleOrStringReturnValue& aDuration) const
+Timing::GetDuration(OwningUnrestrictedDoubleOrString& aDuration) const
 {
   aDuration.SetAsUnrestrictedDouble() = mIterationDuration;
 }
 
 void
-Timing::SetIterationDuration(const UnrestrictedDoubleOrString& aDuration)
+Timing::SetDuration(const UnrestrictedDoubleOrString& aDuration)
 {
   mIterationDuration = aDuration.GetAsUnrestrictedDouble();
 }
 
 void
-Timing::GetActiveDuration(UnrestrictedDoubleOrStringReturnValue& aDuration) const
+Timing::GetActiveDuration(OwningUnrestrictedDoubleOrString& aDuration) const
 {
   aDuration.SetAsUnrestrictedDouble() = mActiveDuration;
 }

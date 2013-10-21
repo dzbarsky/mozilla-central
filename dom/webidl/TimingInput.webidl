@@ -10,20 +10,21 @@
  * liability, trademark and document use rules apply.
  */
 
-enum FillMode { "none", "forwards", "backwards", "both" };
+enum FillMode { "none", "forwards", "backwards", "both", "auto" };
 
 enum PlaybackDirection { "normal", "reverse", "alternate", "alternate-reverse" };
 
 dictionary TimingInput {
-  double                             startDelay = 0;
-  FillMode                           fillMode = "forwards";
+  double                             delay = 0;
+  FillMode                           fill = "auto";
   double                             iterationStart = 0.0;
-  unrestricted double                iterationCount = 1.0;
-  unrestricted double iterationDuration = 2.0;
-  unrestricted double activeDuration = 2.0;
-  //(unrestricted double or DOMString) iterationDuration = "auto";
+  unrestricted double                iterations = 1.0;
+  unrestricted double duration = 1.0;
+  unrestricted double activeDuration = 1.0;
+  //(unrestricted double or DOMString) duration = "auto";
   //(unrestricted double or DOMString) activeDuration = "auto";
   double                             playbackRate = 1.0;
   PlaybackDirection                  direction = "normal";
-  DOMString                          timingFunction = "linear";
+  DOMString                          easing = "linear";
+  //EasingTimesInput easingTimes = "distribute";
 };

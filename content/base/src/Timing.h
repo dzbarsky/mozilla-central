@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class UnrestrictedDoubleOrString;
-class UnrestrictedDoubleOrStringReturnValue;
+class OwningUnrestrictedDoubleOrString;
 
 class Timing MOZ_FINAL : public nsWrapperCache
 {
@@ -34,19 +34,19 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  double StartDelay() const {
+  double Delay() const {
     return mStartDelay;
   }
 
-  void SetStartDelay(double aDelay) {
+  void SetDelay(double aDelay) {
     mStartDelay = aDelay;
   }
 
-  enum FillMode FillMode() const {
+  enum FillMode Fill() const {
     return mFillMode;
   }
 
-  void SetFillMode(enum FillMode aMode) {
+  void SetFill(enum FillMode aMode) {
     mFillMode = aMode;
   }
 
@@ -58,11 +58,11 @@ public:
     mIterationStart = aStart;
   }
 
-  double IterationCount() const {
+  double Iterations() const {
     return mIterationCount;
   }
 
-  void SetIterationCount(double aCount) {
+  void SetIterations(double aCount) {
     mIterationCount = aCount;
   }
 
@@ -70,11 +70,11 @@ public:
     return mIterationDuration;
   }
 
-  void GetIterationDuration(UnrestrictedDoubleOrStringReturnValue& aDuration) const;
+  void GetDuration(OwningUnrestrictedDoubleOrString& aDuration) const;
 
-  void SetIterationDuration(const UnrestrictedDoubleOrString& aDuration);
+  void SetDuration(const UnrestrictedDoubleOrString& aDuration);
 
-  void GetActiveDuration(UnrestrictedDoubleOrStringReturnValue& aDuration) const;
+  void GetActiveDuration(OwningUnrestrictedDoubleOrString& aDuration) const;
 
   void SetActiveDuration(const UnrestrictedDoubleOrString& aDuration);
 
@@ -100,6 +100,18 @@ public:
 
   void SetTimingFunction(const nsAString& aFunction) {
     mFunction = aFunction;
+  }
+
+  void GetEasing(nsString& aEasing) {
+  }
+
+  void SetEasing(const nsAString& aEasing) {
+  }
+
+  void GetEasingTimes(OwningSpacingModeOrDouble& aTimes) {
+  }
+
+  void SetEasingTimes(const SpacingModeOrDouble& aTimes) {
   }
 
 protected:

@@ -133,6 +133,7 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/TimingInputBinding.h"
+#include "nsCSSProps.h"
 #include "WebAnimationManager.h"
 
 using namespace mozilla;
@@ -3465,8 +3466,8 @@ already_AddRefed<Animation>
 Element::Animate(JSContext* cx, const Sequence<JSObject*>& keyframes,
                  const double& aTiming, ErrorResult& rv)
 {
-  TimingInputInitializer timing;
-  timing.mIterationDuration = aTiming;
+  TimingInput timing;
+  timing.mDuration = aTiming;
   return Animate(cx, keyframes, timing, rv);
 }
 

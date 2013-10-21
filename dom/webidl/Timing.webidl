@@ -10,14 +10,21 @@
  * liability, trademark and document use rules apply.
  */
 
+enum SpacingMode { "distribute", "align" };
+
+typedef (SpacingMode or double) EasingTimesInput;
+//typedef (SpacingMode or sequence<double>) EasingTimesInput;
+
 interface Timing {
-  attribute double                             startDelay;
-  attribute FillMode                           fillMode;
+  attribute double                             delay;
+  attribute FillMode                           fill;
   attribute double                             iterationStart;
-  attribute unrestricted double                iterationCount;
-  attribute (unrestricted double or DOMString) iterationDuration;
+  attribute unrestricted double                iterations;
+  attribute (unrestricted double or DOMString) duration;
   attribute (unrestricted double or DOMString) activeDuration;
   attribute double                             playbackRate;
   attribute PlaybackDirection                  direction;
-  attribute DOMString                          timingFunction;
+  attribute DOMString                          easing;
+  EasingTimesInput getEasingTimes();
+  void             setEasingTimes(EasingTimesInput easingTimes);
 };
