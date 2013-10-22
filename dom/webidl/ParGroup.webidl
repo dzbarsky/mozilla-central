@@ -12,8 +12,7 @@
 
 [Pref="layout.web-animations.enabled",
  Constructor (sequence<TimedItem>? children,
-              optional TimingInput timing)]
-//              optional (unrestricted double or TimingInput)? timing = null)]
+              optional (unrestricted double or TimingInput) timing)]
 interface ParGroup : TimingGroup {
   ParGroup clone ();
 };

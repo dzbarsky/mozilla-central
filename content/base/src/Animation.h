@@ -37,7 +37,7 @@ class Animation MOZ_FINAL : public TimedItem
   friend class ::WebAnimationManager;
   friend class Element;
 public:
-  Animation(Element* aElement, const TimingInput& aTiming)
+  Animation(Element* aElement, const UnrestrictedDoubleOrTimingInput& aTiming)
     : TimedItem(aTiming)
     , mElement(aElement)
     , mNeedsRefreshes(true)
@@ -67,7 +67,8 @@ public:
   static already_AddRefed<Animation>
     Constructor(const GlobalObject& aGlobal, JSContext* aCx,
                 Element* aTarget, Sequence<JSObject*> aKeyframes,
-                const TimingInput& aTiming, ErrorResult& rv);
+                const UnrestrictedDoubleOrTimingInput& aTiming,
+                ErrorResult& rv);
 
   Element* GetTarget() {
     return mElement;

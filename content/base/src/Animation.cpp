@@ -34,7 +34,8 @@ Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 /* static */ already_AddRefed<Animation>
 Animation::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
                        Element* aTarget, Sequence<JSObject*> aKeyframes,
-                       const TimingInput& aTiming, ErrorResult& rv)
+                       const UnrestrictedDoubleOrTimingInput& aTiming,
+                       ErrorResult& rv)
 {
   nsRefPtr<Animation> anim = new Animation(aTarget, aTiming);
 

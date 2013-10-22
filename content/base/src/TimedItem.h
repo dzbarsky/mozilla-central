@@ -18,7 +18,7 @@ class TimingInput;
 class TimedItem : public nsDOMEventTargetHelper
 {
 public:
-  TimedItem(const TimingInput& aTiming);
+  TimedItem(const UnrestrictedDoubleOrTimingInput& aTiming);
   TimedItem(TimedItem* aOther);
 
   ~TimedItem();

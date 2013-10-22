@@ -3466,16 +3466,7 @@ Element::InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
 
 already_AddRefed<Animation>
 Element::Animate(JSContext* cx, const Sequence<JSObject*>& keyframes,
-                 const double& aTiming, ErrorResult& rv)
-{
-  TimingInput timing;
-  timing.mDuration = aTiming;
-  return Animate(cx, keyframes, timing, rv);
-}
-
-already_AddRefed<Animation>
-Element::Animate(JSContext* cx, const Sequence<JSObject*>& keyframes,
-                 const TimingInput& aTiming, ErrorResult& rv)
+                 const UnrestrictedDoubleOrTimingInput& aTiming, ErrorResult& rv)
 {
   nsIPresShell *shell = OwnerDoc()->GetShell();
   if (!shell) {

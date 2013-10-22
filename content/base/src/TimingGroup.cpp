@@ -12,7 +12,7 @@ namespace dom {
 
 TimingGroup::TimingGroup(nsISupports* aOwner,
                          const Nullable<Sequence<OwningNonNull<TimedItem> > >& aChildren,
-                         const TimingInput& aTiming)
+                         const UnrestrictedDoubleOrTimingInput& aTiming)
   : TimedItem(aTiming)
   , mOwner(aOwner)
 {

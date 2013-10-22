@@ -17,9 +17,7 @@ typedef Element AnimationTarget;
  Constructor (AnimationTarget? element,
               sequence<object> oneOrMoreKeyframes,
               /*(AnimationEffect or CustomEffect or OneOrMoreKeyframes)?  effect,*/
-              optional TimingInput timing)]
-
-              //optional (unrestricted double or TimingInput?) timing = null)]
+              optional (unrestricted double or TimingInput) timing)]
 
 interface Animation : TimedItem {
 //             attribute (AnimationEffect or CustomEffect)? effect;

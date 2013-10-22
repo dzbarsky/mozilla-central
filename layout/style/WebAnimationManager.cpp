@@ -12,7 +12,8 @@ using namespace mozilla::css;
 using namespace mozilla::dom;
 
 Animation*
-WebAnimationManager::AddAnimation(Element* aElement, const TimingInput& aTiming)
+WebAnimationManager::AddAnimation(Element* aElement,
+                                  const UnrestrictedDoubleOrTimingInput& aTiming)
 {
   nsRefPtr<Animation> anim = new Animation(aElement, aTiming);
   mAnimations.AppendElement(anim);

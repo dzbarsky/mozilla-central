@@ -18,7 +18,7 @@ class SeqGroup MOZ_FINAL : public TimingGroup
 public:
   SeqGroup(nsISupports* aOwner,
            const Nullable<Sequence<OwningNonNull<TimedItem> > >& aChildren,
-           const TimingInput& aTiming)
+           const UnrestrictedDoubleOrTimingInput& aTiming)
     : TimingGroup(aOwner, aChildren, aTiming)
   {
   }
@@ -35,7 +35,8 @@ public:
   static already_AddRefed<SeqGroup>
     Constructor(const GlobalObject& aGlobal,
                 const Nullable<Sequence<OwningNonNull<TimedItem> > >& aChildren,
-                const TimingInput& aTiming, ErrorResult& rv)
+                const UnrestrictedDoubleOrTimingInput& aTiming,
+                ErrorResult& rv)
   {
     nsRefPtr<SeqGroup> group = new SeqGroup(aGlobal.GetAsSupports(), aChildren, aTiming);
     return group.forget();

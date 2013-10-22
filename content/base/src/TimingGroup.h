@@ -18,7 +18,7 @@ class TimingGroup : public TimedItem
 public:
   TimingGroup(nsISupports* aOwner,
               const Nullable<Sequence<OwningNonNull<TimedItem> > >& aChildren,
-              const TimingInput& aTiming);
+              const UnrestrictedDoubleOrTimingInput& aTiming);
 
   TimingGroup(TimingGroup* aOther);
 

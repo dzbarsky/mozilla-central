@@ -46,7 +46,7 @@ public:
   void FlushAnimations(FlushFlags aFlags);
 
   mozilla::dom::Animation* AddAnimation(mozilla::dom::Element* aElement,
-                                        const mozilla::dom::TimingInput& aTiming);
+                                        const mozilla::dom::UnrestrictedDoubleOrTimingInput& aTiming);
 
 protected:
   virtual void ElementDataRemoved() MOZ_OVERRIDE

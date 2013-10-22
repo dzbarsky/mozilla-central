@@ -13,9 +13,18 @@
 namespace mozilla {
 namespace dom {
 
-TimedItem::TimedItem(const TimingInput& aTiming)
+TimedItem::TimedItem(const UnrestrictedDoubleOrTimingInput& aTiming)
 {
-  mTiming = new Timing(this, aTiming);
+  if (aTiming.IsTimingInput()) {
+    mTiming = new Timing(this, aTiming.GetAsTimingInput());
+  } else {
+    TimingInput timing;
+    if (aTiming.IsUnrestrictedDouble()) {
+      timing.mDuration = aTiming.GetAsUnrestrictedDouble();
+    }
+    mTiming = new Timing(this, timing);
+  }
+
   mStartTime = TimeStamp::Now();
   mDuration = TimeDuration::FromSeconds(mTiming->IterationDuration());
   SetIsDOMBinding();
