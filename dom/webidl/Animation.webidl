@@ -13,7 +13,8 @@
 //typedef (Element or PseudoElementReference) AnimationTarget;
 typedef Element AnimationTarget;
 
-[Constructor (AnimationTarget? element,
+[Pref="layout.web-animations.enabled",
+ Constructor (AnimationTarget? element,
               sequence<object> oneOrMoreKeyframes,
               /*(AnimationEffect or CustomEffect or OneOrMoreKeyframes)?  effect,*/
               optional TimingInput timing)]

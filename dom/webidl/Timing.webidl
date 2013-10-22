@@ -15,6 +15,7 @@ enum SpacingMode { "distribute", "align" };
 typedef (SpacingMode or double) EasingTimesInput;
 //typedef (SpacingMode or sequence<double>) EasingTimesInput;
 
+[Pref="layout.web-animations.enabled"]
 interface Timing {
   attribute double                             delay;
   attribute FillMode                           fill;

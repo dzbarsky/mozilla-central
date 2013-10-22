@@ -554,6 +554,8 @@ pref("layout.imagevisibility.enabled", true);
 pref("layout.imagevisibility.numscrollportwidths", 0);
 pref("layout.imagevisibility.numscrollportheights", 1);
 
+pref("layout.web-animations.enabled", true);
+
 // scrollbar snapping region
 // 0 - off
 // 1 and higher - slider thickness multiple

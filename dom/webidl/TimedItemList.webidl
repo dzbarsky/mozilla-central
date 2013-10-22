@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Pref="layout.web-animations.enabled"]
 interface TimedItemList {
   readonly attribute unsigned long length;
   getter TimedItem? item (unsigned long index);

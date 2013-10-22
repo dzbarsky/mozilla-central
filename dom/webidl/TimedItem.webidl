@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Pref="layout.web-animations.enabled"]
 interface TimedItem : EventTarget {
 
     /*
